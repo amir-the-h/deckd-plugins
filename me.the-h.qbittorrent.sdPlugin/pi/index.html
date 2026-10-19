@@ -10,14 +10,14 @@
 </style>
 </head>
 <body>
-  <label>Label <input data-key="label" type="text" placeholder="TORRENT"></label>
+  <label>Label <input data-key="label" type="text" placeholder="QBITTORRENT"></label>
   <label>WebUI URL <input data-key="url" type="text"></label>
-  <label>Default URL <input data-global="qbittorrent" type="text" placeholder="http://localhost:8080"></label>
+  <label>Default URL <input data-global="url" type="text" placeholder="http://localhost:8080"></label>
   <label>Username <input data-key="username" type="text" placeholder="only if auth isn't bypassed"></label>
   <label>Password <input data-key="password" type="password"></label>
   <p class="note">Press the key (or push the dial) to stop every torrent, press again to start them.
     On a dial, tap the strip to toggle the alternative speed limits (shown as ALT).
-    The default URL is shared by every qBittorrent button. The password is stored in plain text in the page file.</p>
+    The default URL is shared by every qBittorrent button; set WebUI URL only to override it for this one. The password is stored in plain text in the page file.</p>
 
 <script>
 let ws, context, settings = {}, globals = {};
@@ -40,7 +40,7 @@ function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, acti
 
 function render() {
   for (const el of globalFields) if (document.activeElement !== el) el.value = globals[el.dataset.global] ?? "";
-  document.querySelector('[data-key="url"]').placeholder = `default: ${globals.qbittorrent || "http://localhost:8080"}`;
+  document.querySelector('[data-key="url"]').placeholder = `default: ${globals.url || "http://localhost:8080"}`;
   for (const el of fields) if (document.activeElement !== el) el.value = settings[el.dataset.key] ?? "";
 }
 

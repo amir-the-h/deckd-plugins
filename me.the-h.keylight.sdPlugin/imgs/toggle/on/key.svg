@@ -1,0 +1,25 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+
+    <!-- Light bulb (ON - bright) -->
+    <path
+        d="M72 40C62 40 54 48 54 58C54 65 57 71 62 74V81C62 83 64 85 66 85H78C80 85 82 83 82 81V74C87 71 90 65 90 58C90 48 82 40 72 40Z"
+        fill="#FFD700" stroke="#FFA500" stroke-width="2" />
+
+    <!-- Base -->
+    <rect x="66" y="85" width="12" height="6" rx="1" fill="#B8860B" />
+
+    <!-- Light rays -->
+    <path d="M72 28 L73 35 L71 35 Z" fill="#FFFF00" />
+    <path d="M90 42 L86 46 L88 49 Z" fill="#FFFF00" />
+    <path d="M98 58 L91 59 L91 57 Z" fill="#FFFF00" />
+    <path d="M90 74 L86 70 L88 67 Z" fill="#FFFF00" />
+    <path d="M54 42 L58 46 L56 49 Z" fill="#FFFF00" />
+    <path d="M46 58 L53 57 L53 59 Z" fill="#FFFF00" />
+    <path d="M54 74 L58 70 L56 67 Z" fill="#FFFF00" />
+
+    <!-- ON indicator -->
+    <circle cx="72" cy="110" r="12" fill="#00FF00" stroke="#00AA00" stroke-width="2" />
+    <text x="72" y="117" font-family="Arial" font-size="16" font-weight="bold" fill="#004400"
+        text-anchor="middle">ON</text>
+</svg>

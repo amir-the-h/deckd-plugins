@@ -1,0 +1,33 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+
+    <!-- Temperature gradient bar -->
+    <defs>
+        <linearGradient id="tempGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#FF6B00;stop-opacity:1" />
+            <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#00BFFF;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+
+    <!-- Thermometer -->
+    <rect x="60" y="30" width="24" height="80" rx="12" fill="url(#tempGradient)" stroke="#888888"
+        stroke-width="2" />
+
+    <!-- Bulb at bottom -->
+    <circle cx="72" cy="115" r="15" fill="#FF6B00" stroke="#CC5500" stroke-width="2" />
+
+    <!-- Temperature marks -->
+    <line x1="88" y1="40" x2="95" y2="40" stroke="#FFFFFF" stroke-width="2" />
+    <text x="100" y="45" font-family="Arial" font-size="10" fill="#FFFFFF">7000K</text>
+
+    <line x1="88" y1="72" x2="95" y2="72" stroke="#FFFFFF" stroke-width="2" />
+    <text x="100" y="77" font-family="Arial" font-size="10" fill="#FFFFFF">4500K</text>
+
+    <line x1="88" y1="104" x2="95" y2="104" stroke="#FFFFFF" stroke-width="2" />
+    <text x="100" y="109" font-family="Arial" font-size="10" fill="#FFFFFF">2900K</text>
+
+    <!-- Rotation arrows -->
+    <path d="M25 72 L32 79 L32 65 Z" fill="#00A0DC" />
+    <path d="M119 72 L112 65 L112 79 Z" fill="#00A0DC" />
+</svg>

@@ -1,0 +1,15 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+
+    <!-- Light bulb -->
+    <path
+        d="M72 35C60 35 50 45 50 57C50 65 54 72 60 76V85C60 88 63 91 66 91H78C81 91 84 88 84 85V76C90 72 94 65 94 57C94 45 84 35 72 35Z"
+        fill="#FFD700" stroke="#FFA500" stroke-width="2" />
+
+    <!-- Base -->
+    <rect x="66" y="91" width="12" height="8" rx="2" fill="#B8860B" />
+
+    <!-- Power symbol -->
+    <circle cx="72" cy="110" r="15" stroke="#00A0DC" stroke-width="3" fill="none" />
+    <line x1="72" y1="96" x2="72" y2="110" stroke="#00A0DC" stroke-width="3" stroke-linecap="round" />
+</svg>

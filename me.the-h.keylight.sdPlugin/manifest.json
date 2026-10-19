@@ -1,0 +1,61 @@
+{
+  "UUID": "me.the-h.keylight",
+  "Name": "Key Light Control",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Turn Elgato Key Lights on and off and set their brightness and colour temperature over your local network",
+  "Icon": "imgs/plugin",
+  "Category": "Key Light Control",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "PropertyInspectorPath": "pi/index.html",
+  "Nodejs": { "Version": "22" },
+  "SDKVersion": 2,
+  "Software": { "MinimumVersion": "6.4" },
+  "OS": [{ "Platform": "linux", "MinimumVersion": "5.0" }],
+  "Actions": [
+    {
+      "UUID": "me.the-h.keylight.toggle",
+      "Name": "Light On/Off",
+      "Tooltip": "Turn the selected light on or off (hold to make it blink)",
+      "Icon": "imgs/toggle/icon",
+      "Controllers": ["Keypad"],
+      "States": [{ "Image": "imgs/toggle/off/key" }, { "Image": "imgs/toggle/on/key" }]
+    },
+    {
+      "UUID": "me.the-h.keylight.brightness",
+      "Name": "Light Brightness",
+      "Tooltip": "Turn to change the selected light's brightness",
+      "Icon": "imgs/brightness/icon",
+      "Controllers": ["Encoder"],
+      "States": [{ "Image": "imgs/brightness/icon" }],
+      "Encoder": { "layout": "$B1", "TriggerDescription": { "Rotate": "Brightness", "Push": "50% (hold: 100%)" } }
+    },
+    {
+      "UUID": "me.the-h.keylight.temperature",
+      "Name": "Light Temperature",
+      "Tooltip": "Turn to change the selected light's colour temperature",
+      "Icon": "imgs/temperature/icon",
+      "Controllers": ["Encoder"],
+      "States": [{ "Image": "imgs/temperature/icon" }],
+      "Encoder": { "layout": "$B1", "TriggerDescription": { "Rotate": "Temperature", "Push": "Neutral (hold: coolest)" } }
+    },
+    {
+      "UUID": "me.the-h.keylight.select",
+      "Name": "Choose Light",
+      "Tooltip": "Turn to pick which light the other actions control; push to search again",
+      "Icon": "imgs/select/icon",
+      "Controllers": ["Encoder"],
+      "States": [{ "Image": "imgs/select/icon" }],
+      "Encoder": { "layout": "$A1", "TriggerDescription": { "Rotate": "Pick a light", "Push": "Search again", "Touch": "Search again" } }
+    },
+    {
+      "UUID": "me.the-h.keylight.identify",
+      "Name": "Blink Light",
+      "Tooltip": "Make the selected light blink so you can tell which one it is",
+      "Icon": "imgs/identify/icon",
+      "Controllers": ["Keypad"],
+      "States": [{ "Image": "imgs/identify/key" }]
+    }
+  ]
+}

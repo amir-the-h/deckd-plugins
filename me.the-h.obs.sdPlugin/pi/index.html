@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input, select { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+  h4 { margin: 16px 0 8px; font-size: 12px; font-weight: 600; color: #9a9a9a; text-transform: uppercase; letter-spacing: .04em; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+  <label>Label <input data-key="label" type="text" placeholder="default"></label>
+  <label data-for="scene" hidden>Scene <select data-key="scene"></select></label>
+  <label data-for="input" hidden>Input <select data-key="input"></select></label>
+  <label data-for="input" hidden>dB per step <input data-key="step" type="number" min="0.1" step="0.5" placeholder="1"></label>
+  <p class="note" id="status"></p>
+
+  <h4>Connection (all OBS buttons)</h4>
+  <label>Host <input data-global="host" type="text" placeholder="127.0.0.1"></label>
+  <label>Port <input data-global="port" type="number" placeholder="4455"></label>
+  <label>Password <input data-global="password" type="password" placeholder="if authentication is on"></label>
+  <p class="note">In OBS: Tools → WebSocket Server Settings. Enable the server; the port and password are
+    shown there under “Show Connect Info”. The password is stored in plain text in deckd's plugin data.</p>
+
+<script>
+let ws, context, action, settings = {}, globals = {}, lists = { scenes: [], inputs: [] };
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const fields = [...document.querySelectorAll("[data-key]")];
+const globalFields = [...document.querySelectorAll("[data-global]")];
+const kind = () => action.split(".").pop();
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  const info = JSON.parse(actionInfoJson);
+  context = uuid;
+  action = info.action || "";
+  settings = info.payload.settings || {};
+  for (const el of document.querySelectorAll("[data-for]")) el.hidden = el.dataset.for !== kind();
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => {
+    send({ event: registerEvent, uuid });
+    send({ event: "getGlobalSettings", context });
+    requestLists();
+  };
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+    if (msg.event === "didReceiveGlobalSettings") { globals = msg.payload.settings || {}; render(); }
+    if (msg.event === "sendToPropertyInspector") {
+      if (msg.payload.error) document.getElementById("status").textContent = `Can't list scenes and inputs: ${msg.payload.error}.`;
+      else { lists = msg.payload; document.getElementById("status").textContent = ""; }
+      render();
+    }
+  };
+}
+
+const requestLists = () => (kind() === "scene" || kind() === "input") && send({ event: "sendToPlugin", context, payload: { command: "lists" } });
+
+/** Options for a picker, keeping the saved value even if OBS doesn't (or can't) list it. */
+function fill(select, names, current, empty) {
+  const all = current && !names.includes(current) ? [current, ...names] : names;
+  select.replaceChildren(new Option(empty, ""), ...all.map((n) => new Option(n, n)));
+  select.value = current || "";
+}
+
+function render() {
+  fill(document.querySelector('[data-key="scene"]'), lists.scenes, settings.scene, "Choose a scene…");
+  fill(document.querySelector('[data-key="input"]'), lists.inputs, settings.input, "Choose an input…");
+  for (const el of fields) if (el.tagName === "INPUT" && document.activeElement !== el) el.value = settings[el.dataset.key] ?? "";
+  for (const el of globalFields) if (document.activeElement !== el) el.value = globals[el.dataset.global] ?? "";
+}
+
+for (const el of fields) {
+  el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => {
+    settings = { ...settings, [el.dataset.key]: el.value };
+    send({ event: "setSettings", context, payload: settings });
+  });
+}
+for (const el of globalFields) {
+  el.addEventListener("change", () => {
+    globals = { ...globals, [el.dataset.global]: el.value.trim() };
+    send({ event: "setGlobalSettings", context, payload: globals });
+    setTimeout(requestLists, 1500); // give the plugin a moment to reconnect
+  });
+}
+</script>
+</body>
+</html>

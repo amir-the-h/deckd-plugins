@@ -1,0 +1,33 @@
+{
+  "UUID": "me.the-h.qbittorrent",
+  "Name": "qBittorrent",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Transfer speeds, stop/start all and alternative speed limits for your qBittorrent client, through its WebUI",
+  "Icon": "imgs/plugin",
+  "Category": "qBittorrent",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": { "Version": "22" },
+  "SDKVersion": 2,
+  "Software": { "MinimumVersion": "6.4" },
+  "OS": [
+    { "Platform": "linux", "MinimumVersion": "5.0" },
+    { "Platform": "mac", "MinimumVersion": "12" }
+  ],
+  "Actions": [
+    {
+      "UUID": "me.the-h.qbittorrent.transfer",
+      "Name": "Transfer Status",
+      "Tooltip": "Download and upload speed. Press to stop or start all torrents; tap the strip to toggle the alternative speed limits.",
+      "Icon": "imgs/action",
+      "Controllers": ["Keypad", "Encoder"],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [{ "Image": "imgs/key", "ShowTitle": false }],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": { "Push": "Stop / start all", "Touch": "Alt speed limits" }
+      }
+    }
+  ]
+}

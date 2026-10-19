@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  h3 { margin: 4px 0 8px; font-size: 12px; font-weight: 600; color: #9a9a9a; text-transform: uppercase; letter-spacing: .04em; }
+  .group { margin-bottom: 12px; }
+  .row { display: grid; grid-template-columns: 110px 44px auto; align-items: center; gap: 8px; margin-bottom: 6px; }
+  input[type=color] { width: 44px; height: 26px; padding: 0; border: 0; background: none; cursor: pointer; }
+  input[type=color].unset { opacity: .35; }
+  button { justify-self: start; background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 2px 8px; cursor: pointer; }
+  .note { color: #8a8a8a; font-size: 12px; margin: 4px 0 0; line-height: 1.4; }
+  label.wide { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; margin: 12px 0 4px; }
+  input[type=text] { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+</style>
+</head>
+<body>
+<div id="form"></div>
+<p class="note" id="note"></p>
+<label class="wide">Light addresses <input id="addresses" type="text" placeholder="optional, e.g. 192.168.1.20"></label>
+<p class="note">Lights are found automatically with mDNS (avahi). List IP addresses here, separated by commas,
+  if yours aren't found. Shared by every Key Light button.</p>
+
+<script>
+// Fields per action: [setting key, label, default, optional]. Optional colours (backgrounds)
+// are "none" until picked. Defaults must match DEFAULTS in plugin.js.
+const P = "me.the-h.keylight.";
+const toggle = (on, off) => [
+  ["State: on", [["onColor", "Icon", on], ["onBackground", "Background", "#000000", true]]],
+  ["State: off", [["offColor", "Icon", off], ["offBackground", "Background", "#000000", true]]],
+];
+const dial = (icon, bar) => [["Touch strip", [
+  ["iconColor", "Icon", icon],
+  ["titleColor", "Title", "#ffffff"],
+  ["valueColor", "Value", "#ffffff"],
+  ...(bar ? [["barColor", "Bar", bar]] : []),
+]]];
+const FIELDS = {
+  [P + "toggle"]: toggle("#ffc83d", "#6a6a6a"),
+  [P + "identify"]: [["Key", [["color", "Icon", "#ffffff"], ["background", "Background", "#000000", true]]]],
+  [P + "select"]: dial("#ffffff"),
+  [P + "brightness"]: dial("#ffc83d", "#ffc83d"),
+  [P + "temperature"]: dial("#ffffff", "#ffffff"),
+};
+const NOTES = {
+  [P + "toggle"]: "Hold the key to make the selected light blink.",
+  [P + "select"]: "Turn to pick the light the other Key Light actions control; push or tap to search again.",
+  [P + "brightness"]: "Push for 50%, hold for 100%.",
+  [P + "temperature"]: "Push for neutral, hold for the coolest setting.",
+};
+
+let ws, context, action, settings = {}, globals = {};
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const save = () => send({ event: "setSettings", context, payload: settings });
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  const info = JSON.parse(actionInfoJson);
+  context = uuid;
+  action = info.action;
+  settings = info.payload?.settings || {};
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => { send({ event: registerEvent, uuid }); send({ event: "getGlobalSettings", context }); };
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+    if (msg.event === "didReceiveGlobalSettings") {
+      globals = msg.payload.settings || {};
+      const box = document.getElementById("addresses");
+      if (document.activeElement !== box) box.value = globals.addresses || "";
+    }
+  };
+}
+
+function render() {
+  const form = document.getElementById("form");
+  form.innerHTML = "";
+  for (const [heading, fields] of FIELDS[action] || []) {
+    const group = document.createElement("div");
+    group.className = "group";
+    group.innerHTML = `<h3>${heading}</h3>`;
+    for (const [key, label, def, optional] of fields) {
+      const row = document.createElement("div");
+      row.className = "row";
+      const name = document.createElement("span");
+      name.textContent = label;
+      const input = document.createElement("input");
+      input.type = "color";
+      const set = settings[key];
+      input.value = set || def;
+      input.classList.toggle("unset", optional && !set);
+      input.title = optional && !set ? "None" : "";
+      input.addEventListener("input", () => {
+        settings = { ...settings, [key]: input.value };
+        input.classList.remove("unset");
+        save();
+      });
+      const reset = document.createElement("button");
+      reset.textContent = optional ? "None" : "Default";
+      reset.addEventListener("click", () => {
+        settings = { ...settings };
+        delete settings[key];
+        save();
+        render();
+      });
+      row.append(name, input, reset);
+      group.append(row);
+    }
+    form.append(group);
+  }
+  document.getElementById("note").textContent = NOTES[action] || "";
+}
+document.getElementById("addresses").addEventListener("change", (e) => {
+  globals = { ...globals, addresses: e.target.value.trim() };
+  send({ event: "setGlobalSettings", context, payload: globals });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+
+    <!-- Sun icon (brightness) -->
+    <circle cx="72" cy="60" r="20" fill="#FFD700" stroke="#FFA500" stroke-width="2" />
+
+    <!-- Sun rays -->
+    <line x1="72" y1="25" x2="72" y2="35" stroke="#FFD700" stroke-width="3" stroke-linecap="round" />
+    <line x1="97" y1="35" x2="90" y2="42" stroke="#FFD700" stroke-width="3" stroke-linecap="round" />
+    <line x1="107" y1="60" x2="97" y2="60" stroke="#FFD700" stroke-width="3" stroke-linecap="round" />
+    <line x1="97" y1="85" x2="90" y2="78" stroke="#FFD700" stroke-width="3" stroke-linecap="round" />
+    <line x1="47" y1="35" x2="54" y2="42" stroke="#FFD700" stroke-width="3" stroke-linecap="round" />
+    <line x1="37" y1="60" x2="47" y2="60" stroke="#FFD700" stroke-width="3" stroke-linecap="round" />
+    <line x1="47" y1="85" x2="54" y2="78" stroke="#FFD700" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Brightness scale bars -->
+    <rect x="35" y="100" width="15" height="25" rx="2" fill="#555555" />
+    <rect x="55" y="90" width="15" height="35" rx="2" fill="#777777" />
+    <rect x="75" y="80" width="15" height="45" rx="2" fill="#999999" />
+    <rect x="95" y="70" width="15" height="55" rx="2" fill="#FFD700" />
+
+    <!-- Rotation arrows -->
+    <path d="M25 60 L32 67 L32 53 Z" fill="#00A0DC" />
+    <path d="M119 60 L112 53 L112 67 Z" fill="#00A0DC" />
+</svg>

@@ -7,8 +7,12 @@ need Node.js ≥ 22.
 
 | Plugin | What it does |
 |---|---|
+| [OBS Control](#obs-control) | Scenes, recording, streaming, replay buffer, audio inputs and stats in OBS Studio |
+| [Discord Voice](#discord-voice) | Mute, deafen, push-to-talk and voice volume in the Discord app |
+| [Key Light Control](#key-light-control) | Power, brightness and colour temperature of Elgato Key Lights |
 | [Hyprland Shader](#hyprland-shader) | Cycle or toggle Hyprland screen shaders |
-| [Homelab](#homelab) | Prometheus stats, web service health, qBittorrent |
+| [Server Monitor](#server-monitor) | Prometheus metrics and web service health checks |
+| [qBittorrent](#qbittorrent) | Transfer speeds and controls for your qBittorrent client |
 | [Claude Usage](#claude-usage) | Claude Code plan limits and token counts |
 
 ## Install
@@ -18,7 +22,7 @@ reinstalling:
 
 ```bash
 git clone https://github.com/amir-the-h/deckd-plugins
-ln -s "$PWD/deckd-plugins/me.the-h.homelab.sdPlugin" ~/.config/deckd/plugins/
+ln -s "$PWD/deckd-plugins/me.the-h.obs.sdPlugin" ~/.config/deckd/plugins/
 systemctl --user restart deckd
 ```
 
@@ -30,7 +34,63 @@ scripts/pack.sh        # writes dist/<uuid>.streamDeckPlugin for every plugin
 ```
 
 Each plugin then appears in the **Actions** tab of the deckd UI. Drag an action
-onto a key or dial and click it to open its settings.
+onto a key or dial and click it to open its settings. Settings marked "all
+buttons" (server addresses, passwords) are shared by every button of that
+plugin and stored in `~/.config/deckd/plugin-data/<plugin>.json`.
+
+## OBS Control
+
+Talks to the WebSocket server built into OBS Studio 28 and newer. Enable it in
+OBS under **Tools → WebSocket Server Settings**, then enter the port and, if
+authentication is on, the password in any OBS button's settings.
+
+- **Scene**: switch to a scene; the key is outlined while that scene is live.
+- **Record**, **Stream**, **Replay Buffer**: start or stop; outlined while on.
+- **Save Replay**: save the replay buffer.
+- **Audio Input**: mute or unmute an input; on a dial, turn to change its
+  volume in dB.
+- **Stats**: frame rate, CPU use and dropped frames.
+
+Buttons follow changes made in OBS itself, and reconnect when OBS restarts.
+
+## Discord Voice
+
+Talks to the Discord desktop app (native, Flatpak or Snap) over its local RPC
+socket.
+
+- **Mute**, **Deafen**: toggle; outlined in red while on.
+- **Push to Talk**: unmutes while the key is held.
+- **Voice Volume**: output or microphone volume; on a dial, turn to change it
+  and push to deafen or mute.
+
+Discord only allows voice control for apps you own, so this needs a free app
+of your own:
+
+1. Create an application at <https://discord.com/developers/applications>.
+2. Under **OAuth2**, copy the client ID and client secret into any Discord
+   button's settings.
+3. Under **OAuth2 → Redirects**, add `http://localhost`.
+4. With Discord open, accept the **Authorize** prompt it shows once.
+
+The secret and the sign-in token are stored in plain text in deckd's plugin
+data.
+
+## Key Light Control
+
+Controls Elgato Key Light, Key Light Air, Ring Light and Light Strip over
+their local HTTP API.
+
+- **Light On/Off** (key): toggle; hold to make the light blink.
+- **Light Brightness**, **Light Temperature** (dials): turn to adjust; push for
+  50% / neutral, hold for 100% / coolest.
+- **Choose Light** (dial): turn to pick which light the other actions control;
+  push to search again.
+- **Blink Light** (key): make the selected light blink so you can tell which
+  one it is.
+
+Lights are found with mDNS (`avahi-browse`, from Avahi). If yours aren't found,
+list their IP addresses in the settings. Each button's colours can be changed
+there too.
 
 ## Hyprland Shader
 
@@ -44,9 +104,7 @@ Applies the `.glsl` screen shaders in `~/.config/hypr/shaders` (or its
 Works with both Lua (`hyprctl eval`) and classic hyprlang configs. While a
 shader is on, damage tracking is turned off so the whole screen stays shaded.
 
-## Homelab
-
-Three actions for self-hosted services; each works on keys and dials.
+## Server Monitor
 
 - **Prometheus stat**: the result of any PromQL query as a number or gauge,
   with warn/critical thresholds (above or below), units, formats (percent,
@@ -54,18 +112,26 @@ Three actions for self-hosted services; each works on keys and dials.
   a link to open on press. Use **Test query** in its settings to check it.
 - **Service health**: up/down dots for a list of `Name=URL` lines. Anything
   answering below HTTP 500, redirects and login pages included, counts as up.
-- **qBittorrent**: download and upload speed. Press to stop or start every
-  torrent; tap the strip to toggle the alternative speed limits.
 
-Set the **Default server** (Prometheus) and **Default URL** (qBittorrent) once
-in any button's settings; every button uses them unless it has its own. They
-fall back to `http://localhost:9090` and `http://localhost:8080`. Services with
-certificates from a private CA work as long as the CA is in the system trust
-store.
+Set the **Default server** once in any stat button's settings; it falls back to
+`http://localhost:9090`. Services with certificates from a private CA work as
+long as the CA is in the system trust store.
 
-The qBittorrent username and password are only needed when the WebUI doesn't
-bypass authentication for your network. They're stored in plain text in
-deckd's page files.
+## qBittorrent
+
+A remote for the qBittorrent client you run, through its built-in WebUI. It
+shows what the client is doing and offers the same controls as the WebUI's
+toolbar; it doesn't search for or add anything.
+
+- **Transfer Status**: download and upload speed and the number of active
+  torrents. Press to stop or start all of them; on a dial, tap the strip to
+  toggle the alternative speed limits.
+
+Enable the WebUI in qBittorrent under **Tools → Options → Web UI** and set its
+address as the **Default URL** (falls back to `http://localhost:8080`). The
+username and password are only needed when the WebUI doesn't bypass
+authentication for your network; they're stored in plain text in deckd's page
+files.
 
 ## Claude Usage
 
@@ -84,8 +150,13 @@ undocumented and may change or stop working. The plugin reads (and never
 refreshes) the login token Claude Code stores in `.credentials.json`, so it
 works on Linux but not on macOS, where Claude Code keeps the token in the
 Keychain. Limits refresh every 5 minutes. Token counts are read from Claude
-Code's local transcripts and never leave your machine. This plugin is not made
-by or affiliated with Anthropic.
+Code's local transcripts and never leave your machine.
+
+## Trademarks
+
+These plugins are independent and not affiliated with or endorsed by Elgato,
+Corsair, the OBS Project, Discord, qBittorrent or Anthropic. Product names are
+used only to say what each plugin works with.
 
 ## Writing your own
 
@@ -94,4 +165,4 @@ deckd implements it: see `.claude/skills/deckd-plugin-dev/` there.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). Icons drawn from Material Design Icons are Apache 2.0.

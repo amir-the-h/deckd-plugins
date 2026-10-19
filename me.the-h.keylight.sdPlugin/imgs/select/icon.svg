@@ -1,0 +1,18 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+
+    <!-- Light bulb icon -->
+    <path
+        d="M72 30C60 30 50 40 50 52C50 60 54 67 60 71V80C60 83 63 86 66 86H78C81 86 84 83 84 80V71C90 67 94 60 94 52C94 40 84 30 72 30Z"
+        fill="#FFD700" stroke="#FFA500" stroke-width="2" />
+
+    <!-- Base -->
+    <rect x="66" y="86" width="12" height="8" rx="2" fill="#B8860B" />
+
+    <!-- Rotation arrows -->
+    <path d="M30 72 L40 82 L40 62 Z" fill="#00A0DC" />
+    <path d="M114 72 L104 62 L104 82 Z" fill="#00A0DC" />
+
+    <!-- Selection indicator -->
+    <circle cx="72" cy="110" r="6" fill="#00FF00" />
+</svg>

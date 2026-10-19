@@ -1,0 +1,26 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+
+    <!-- Light bulb with rays (identifying/flashing) -->
+    <path
+        d="M72 35C60 35 50 45 50 57C50 65 54 72 60 76V85C60 88 63 91 66 91H78C81 91 84 88 84 85V76C90 72 94 65 94 57C94 45 84 35 72 35Z"
+        fill="#FFD700" stroke="#FFA500" stroke-width="2" />
+
+    <!-- Base -->
+    <rect x="66" y="91" width="12" height="8" rx="2" fill="#B8860B" />
+
+    <!-- Flash/identify rays -->
+    <path d="M72 20 L74 30 L70 30 Z" fill="#FFFF00" />
+    <path d="M95 35 L89 40 L92 44 Z" fill="#FFFF00" />
+    <path d="M105 57 L95 59 L95 55 Z" fill="#FFFF00" />
+    <path d="M95 79 L89 74 L92 70 Z" fill="#FFFF00" />
+
+    <path d="M72 94 L70 104 L74 104 Z" fill="#FFFF00" />
+    <path d="M49 79 L55 74 L52 70 Z" fill="#FFFF00" />
+    <path d="M39 57 L49 55 L49 59 Z" fill="#FFFF00" />
+    <path d="M49 35 L55 40 L52 44 Z" fill="#FFFF00" />
+
+    <!-- Label -->
+    <text x="72" y="125" font-family="Arial" font-size="14" fill="#FFFFFF" text-anchor="middle">
+        IDENTIFY</text>
+</svg>

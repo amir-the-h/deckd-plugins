@@ -1,10 +1,9 @@
-// Homelab — Prometheus stats, service health and qBittorrent on a Stream Deck (Node >= 22, no deps).
+// Server Monitor — Prometheus stats and web service health on a deck (Node >= 22, no deps).
 //
-// Three actions:
-//   * stat:        any PromQL query rendered as a number or gauge, coloured by warn/crit thresholds.
-//                  Home Assistant exports to the same Prometheus, so this covers health sensors too.
-//   * services:    HTTP up/down dots for a list of URLs (anything answering < 500 counts as up).
-//   * qbittorrent: transfer speeds; press stops/starts every torrent, a strip tap toggles alt limits.
+// Two actions:
+//   * stat:     any PromQL query rendered as a number or gauge, coloured by warn/crit thresholds.
+//               Anything exported to Prometheus works: node_exporter, Home Assistant, blackbox probes…
+//   * services: HTTP up/down dots for a list of URLs (anything answering < 500 counts as up).
 
 // --------------------------------------------------------------------------- startup
 
@@ -38,16 +37,14 @@ ws.onmessage = (m) => {
 
 // --------------------------------------------------------------------------- config
 
-// Plugin-wide defaults, set from any button's settings panel; a button's own URL overrides them.
-const FALLBACK = { prometheus: "http://localhost:9090", qbittorrent: "http://localhost:8080" };
+// The default Prometheus server is set from any stat button's settings panel; a button's own overrides it.
+const FALLBACK_SERVER = "http://localhost:9090";
 let globals = null; // until the host sends them; nothing is fetched before that
-const promServer = (s) => s.server || globals?.prometheus || FALLBACK.prometheus;
-const qbitUrl = (s) => s.url || globals?.qbittorrent || FALLBACK.qbittorrent;
+const promServer = (s) => s.server || globals?.prometheus || FALLBACK_SERVER;
 
 const TICK_MS = 2_000;
 const STAT_INTERVAL_S = 30;
 const SERVICES_INTERVAL_S = 60;
-const QBIT_INTERVAL_S = 3;
 const TIMEOUT_MS = 8_000;
 
 const ACTION = (suffix) => `${args.pluginUUID}.${suffix}`;
@@ -253,108 +250,11 @@ ${servicesGrid(inst, 200, 100, 30, 3)}
 </svg>`;
 }
 
-// --------------------------------------------------------------------------- qbittorrent
-
-const qbitSessions = new Map(); // base url -> SID cookie
-
-async function qbit(inst, path, form) {
-  const base = trimSlash(qbitUrl(inst.settings));
-  const go = () => fetch(base + path, {
-    method: form ? "POST" : "GET",
-    headers: {
-      Referer: base,
-      ...(qbitSessions.get(base) ? { Cookie: qbitSessions.get(base) } : {}),
-      ...(form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
-    },
-    body: form ? new URLSearchParams(form) : undefined,
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
-  let res = await go();
-  // Only needed when the WebUI doesn't bypass auth for this client.
-  if (res.status === 403 && inst.settings.username) {
-    const login = await fetch(base + "/api/v2/auth/login", {
-      method: "POST",
-      headers: { Referer: base, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ username: inst.settings.username, password: inst.settings.password || "" }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    const sid = login.headers.get("set-cookie")?.match(/SID=[^;]+/)?.[0];
-    if (sid) qbitSessions.set(base, sid);
-    res = await go();
-  }
-  if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status} for ${path}`), { status: res.status });
-  return (res.headers.get("content-type") || "").includes("json") ? res.json() : res.text();
-}
-
-async function refreshQbit(inst) {
-  try {
-    const [info, running, alt] = await Promise.all([
-      qbit(inst, "/api/v2/transfer/info"),
-      qbit(inst, "/api/v2/torrents/info?filter=running").catch(() => qbit(inst, "/api/v2/torrents/info?filter=resumed")),
-      qbit(inst, "/api/v2/transfer/speedLimitsMode"),
-    ]);
-    inst.state = { down: info.dl_info_speed, up: info.up_info_speed, running: running.length, alt: String(alt).trim() === "1", error: null };
-  } catch (e) {
-    inst.state = { ...inst.state, error: e.status === 403 ? "login" : "offline" };
-    log(`qbittorrent: ${e.message}`);
-  }
-}
-
-// qBittorrent 5 renamed pause/resume to stop/start; fall back for 4.x.
-async function qbitToggleAll(inst) {
-  const stop = (inst.state?.running ?? 1) > 0;
-  try {
-    await qbit(inst, `/api/v2/torrents/${stop ? "stop" : "start"}`, { hashes: "all" });
-  } catch (e) {
-    if (e.status !== 404) throw e;
-    await qbit(inst, `/api/v2/torrents/${stop ? "pause" : "resume"}`, { hashes: "all" });
-  }
-}
-
-function qbitStatus(st) {
-  if (!st) return { text: "…", col: GREY };
-  if (st.error && st.down == null) return { text: st.error, col: GREY };
-  if (!st.running) return { text: "stopped", col: AMBER };
-  return { text: `${st.running} active`, col: "#d8d8d8" };
-}
-
-const speed = (v) => (v == null ? "—" : fmt(v, "bytes_rate"));
-
-function qbitKey(inst) {
-  const st = inst.state;
-  const status = qbitStatus(st);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144">
-<rect width="144" height="144" fill="#141414"/>
-<text x="72" y="24" ${FONT} font-size="16" font-weight="600" letter-spacing="2" text-anchor="middle" fill="${DIM}">${esc((inst.settings.label || "TORRENT").toUpperCase())}</text>
-${st?.alt ? `<text x="138" y="22" ${FONT} font-size="12" font-weight="700" text-anchor="end" fill="${AMBER}">ALT</text>` : ""}
-<text x="10" y="66" ${FONT} font-size="22" fill="#5aa9e6">↓</text>
-<text x="134" y="66" ${FONT} font-size="26" font-weight="700" text-anchor="end" fill="${TEXT}">${esc(speed(st?.down))}</text>
-<text x="10" y="100" ${FONT} font-size="22" fill="${GREEN}">↑</text>
-<text x="134" y="100" ${FONT} font-size="22" font-weight="600" text-anchor="end" fill="#d8d8d8">${esc(speed(st?.up))}</text>
-<text x="72" y="136" ${FONT} font-size="17" text-anchor="middle" fill="${status.col}">${esc(status.text)}</text>
-</svg>`;
-}
-
-function qbitStrip(inst) {
-  const st = inst.state;
-  const status = qbitStatus(st);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
-<rect width="200" height="100" fill="#141414"/>
-<text x="6" y="20" ${FONT} font-size="15" font-weight="600" letter-spacing="1.5" fill="${DIM}">${esc((inst.settings.label || "TORRENT").toUpperCase())}</text>
-${st?.alt ? `<text x="194" y="20" ${FONT} font-size="13" font-weight="700" text-anchor="end" fill="${AMBER}">ALT</text>` : ""}
-<text x="6" y="54" ${FONT} font-size="20" fill="#5aa9e6">↓</text>
-<text x="194" y="54" ${FONT} font-size="26" font-weight="700" text-anchor="end" fill="${TEXT}">${esc(speed(st?.down))}</text>
-<text x="6" y="92" ${FONT} font-size="18" fill="${GREEN}">↑ <tspan fill="#d8d8d8">${esc(speed(st?.up))}</tspan></text>
-<text x="194" y="92" ${FONT} font-size="15" text-anchor="end" fill="${status.col}">${esc(status.text)}</text>
-</svg>`;
-}
-
 // --------------------------------------------------------------------------- dispatch
 
 const KINDS = {
   stat: { refresh: refreshStat, key: statKey, strip: statStrip, interval: (s) => num(s.interval) || STAT_INTERVAL_S },
   services: { refresh: refreshServices, key: servicesKey, strip: servicesStrip, interval: (s) => num(s.interval) || SERVICES_INTERVAL_S },
-  qbittorrent: { refresh: refreshQbit, key: qbitKey, strip: qbitStrip, interval: () => QBIT_INTERVAL_S },
 };
 
 const kindOf = (inst) => KINDS[inst.action.slice(args.pluginUUID.length + 1)];
@@ -406,9 +306,7 @@ async function press(context) {
   const inst = instances.get(context);
   if (!inst) return;
   try {
-    if (inst.action === ACTION("qbittorrent")) {
-      await qbitToggleAll(inst);
-    } else if (inst.action === ACTION("stat") && inst.settings.url) {
+    if (inst.action === ACTION("stat") && inst.settings.url) {
       send({ event: "openUrl", payload: { url: inst.settings.url } });
       return;
     }
@@ -424,7 +322,6 @@ async function tap(context) {
   const inst = instances.get(context);
   if (!inst) return;
   try {
-    if (inst.action === ACTION("qbittorrent")) await qbit(inst, "/api/v2/transfer/toggleSpeedLimitsMode", {});
     await refresh(context);
   } catch (e) {
     log(`${inst.action} tap: ${e.message}`);

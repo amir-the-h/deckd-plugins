@@ -1,0 +1,43 @@
+{
+  "UUID": "me.the-h.obs",
+  "Name": "OBS Control",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Switch scenes, start and stop recording, streaming and the replay buffer, mute and set input volumes, and watch performance in OBS Studio",
+  "Icon": "imgs/plugin",
+  "Category": "OBS Control",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "PropertyInspectorPath": "pi/index.html",
+  "Nodejs": { "Version": "22" },
+  "SDKVersion": 2,
+  "Software": { "MinimumVersion": "6.4" },
+  "OS": [
+    { "Platform": "linux", "MinimumVersion": "5.0" },
+    { "Platform": "mac", "MinimumVersion": "12" },
+    { "Platform": "windows", "MinimumVersion": "10" }
+  ],
+  "Actions": [
+    { "UUID": "me.the-h.obs.scene", "Name": "Scene", "Tooltip": "Switch to a scene; the key lights up while it's live", "Icon": "imgs/scene",
+      "Controllers": ["Keypad", "Encoder"], "States": [{ "Image": "imgs/scene-key", "ShowTitle": false }],
+      "Encoder": { "Icon": "imgs/scene", "TriggerDescription": { "Push": "Switch to scene", "Touch": "Switch to scene" } } },
+    { "UUID": "me.the-h.obs.record", "Name": "Record", "Tooltip": "Start or stop recording", "Icon": "imgs/record",
+      "Controllers": ["Keypad", "Encoder"], "States": [{ "Image": "imgs/record-key", "ShowTitle": false }],
+      "Encoder": { "Icon": "imgs/record", "TriggerDescription": { "Push": "Start / stop", "Touch": "Start / stop" } } },
+    { "UUID": "me.the-h.obs.stream", "Name": "Stream", "Tooltip": "Start or stop streaming", "Icon": "imgs/stream",
+      "Controllers": ["Keypad", "Encoder"], "States": [{ "Image": "imgs/stream-key", "ShowTitle": false }],
+      "Encoder": { "Icon": "imgs/stream", "TriggerDescription": { "Push": "Start / stop", "Touch": "Start / stop" } } },
+    { "UUID": "me.the-h.obs.replay", "Name": "Replay Buffer", "Tooltip": "Start or stop the replay buffer", "Icon": "imgs/replay",
+      "Controllers": ["Keypad", "Encoder"], "States": [{ "Image": "imgs/replay-key", "ShowTitle": false }],
+      "Encoder": { "Icon": "imgs/replay", "TriggerDescription": { "Push": "Start / stop", "Touch": "Start / stop" } } },
+    { "UUID": "me.the-h.obs.save", "Name": "Save Replay", "Tooltip": "Save the replay buffer to a file", "Icon": "imgs/save",
+      "Controllers": ["Keypad", "Encoder"], "States": [{ "Image": "imgs/save-key", "ShowTitle": false }],
+      "Encoder": { "Icon": "imgs/save", "TriggerDescription": { "Push": "Save", "Touch": "Save" } } },
+    { "UUID": "me.the-h.obs.input", "Name": "Audio Input", "Tooltip": "Mute an audio input; on a dial, turn to change its volume", "Icon": "imgs/mic",
+      "Controllers": ["Keypad", "Encoder"], "States": [{ "Image": "imgs/mic-key", "ShowTitle": false }],
+      "Encoder": { "Icon": "imgs/mic", "TriggerDescription": { "Rotate": "Volume", "Push": "Mute", "Touch": "Mute" } } },
+    { "UUID": "me.the-h.obs.stats", "Name": "Stats", "Tooltip": "Frame rate, CPU use and dropped frames", "Icon": "imgs/stats",
+      "Controllers": ["Keypad", "Encoder"], "States": [{ "Image": "imgs/stats-key", "ShowTitle": false }],
+      "Encoder": { "Icon": "imgs/stats" } }
+  ]
+}

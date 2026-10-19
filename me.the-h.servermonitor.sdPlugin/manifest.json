@@ -1,0 +1,78 @@
+{
+  "UUID": "me.the-h.servermonitor",
+  "Name": "Server Monitor",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Prometheus metrics and web service health checks for servers you run",
+  "Icon": "imgs/plugin",
+  "Category": "Server Monitor",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": {
+    "Version": "22"
+  },
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.4"
+  },
+  "OS": [
+    {
+      "Platform": "linux",
+      "MinimumVersion": "5.0"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
+  ],
+  "Actions": [
+    {
+      "UUID": "me.the-h.servermonitor.stat",
+      "Name": "Prometheus stat",
+      "Tooltip": "Shows the result of a PromQL query, coloured by thresholds. Press to open the link (or refresh).",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/stat.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Push": "Open link / refresh",
+          "Touch": "Refresh"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.servermonitor.services",
+      "Name": "Service health",
+      "Tooltip": "Up/down dots for a list of web services. Press to re-check.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/services.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Push": "Re-check",
+          "Touch": "Re-check"
+        }
+      }
+    }
+  ]
+}

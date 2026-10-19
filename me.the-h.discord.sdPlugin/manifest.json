@@ -1,0 +1,30 @@
+{
+  "UUID": "me.the-h.discord",
+  "Name": "Discord Voice",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Mute, deafen, push-to-talk and voice volume for the Discord desktop app, through Discord's local RPC",
+  "Icon": "imgs/plugin",
+  "Category": "Discord Voice",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "PropertyInspectorPath": "pi/index.html",
+  "Nodejs": { "Version": "22" },
+  "SDKVersion": 2,
+  "Software": { "MinimumVersion": "6.4" },
+  "OS": [
+    { "Platform": "linux", "MinimumVersion": "5.0" },
+    { "Platform": "mac", "MinimumVersion": "12" }
+  ],
+  "Actions": [
+    { "UUID": "me.the-h.discord.mute", "Name": "Mute", "Tooltip": "Mute or unmute your microphone in Discord", "Icon": "imgs/mute",
+      "Controllers": ["Keypad"], "States": [{ "Image": "imgs/mute-key", "ShowTitle": false }] },
+    { "UUID": "me.the-h.discord.deafen", "Name": "Deafen", "Tooltip": "Deafen or undeafen yourself in Discord", "Icon": "imgs/deafen",
+      "Controllers": ["Keypad"], "States": [{ "Image": "imgs/deafen-key", "ShowTitle": false }] },
+    { "UUID": "me.the-h.discord.ptt", "Name": "Push to Talk", "Tooltip": "Unmute while the key is held", "Icon": "imgs/ptt",
+      "Controllers": ["Keypad"], "States": [{ "Image": "imgs/ptt-key", "ShowTitle": false }] },
+    { "UUID": "me.the-h.discord.volume", "Name": "Voice Volume", "Tooltip": "Discord's output or microphone volume; on a dial, turn to change it and push to (un)mute", "Icon": "imgs/volume",
+      "Controllers": ["Keypad", "Encoder"], "States": [{ "Image": "imgs/volume-key", "ShowTitle": false }],
+      "Encoder": { "Icon": "imgs/volume", "TriggerDescription": { "Rotate": "Volume", "Push": "Mute / deafen", "Touch": "Mute / deafen" } } }
+  ]
+}
