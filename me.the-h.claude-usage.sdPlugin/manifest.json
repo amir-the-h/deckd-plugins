@@ -1,0 +1,57 @@
+{
+  "UUID": "me.the-h.claude-usage",
+  "Name": "Claude Usage",
+  "Version": "0.1.0",
+  "Author": "Amir H",
+  "Description": "Claude Code plan usage: session and weekly limits with reset countdowns, plus token counts from local logs",
+  "Icon": "imgs/plugin",
+  "Category": "Claude Usage",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": { "Version": "22" },
+  "SDKVersion": 2,
+  "Software": { "MinimumVersion": "6.4" },
+  "OS": [{ "Platform": "linux", "MinimumVersion": "5.0" }],
+  "Actions": [
+    {
+      "UUID": "me.the-h.claude-usage.session",
+      "Name": "Session limit",
+      "Tooltip": "5-hour session usage and time until it resets. Press to refresh.",
+      "Icon": "imgs/action",
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [{ "Image": "imgs/key", "ShowTitle": false }]
+    },
+    {
+      "UUID": "me.the-h.claude-usage.weekly",
+      "Name": "Weekly limit",
+      "Tooltip": "7-day usage and time until it resets. Press to refresh.",
+      "Icon": "imgs/action",
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [{ "Image": "imgs/key", "ShowTitle": false }]
+    },
+    {
+      "UUID": "me.the-h.claude-usage.tokens",
+      "Name": "Tokens",
+      "Tooltip": "Claude Code tokens used in the current session, week or today (from local logs). Press to refresh.",
+      "Icon": "imgs/action",
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [{ "Image": "imgs/key", "ShowTitle": false }]
+    },
+    {
+      "UUID": "me.the-h.claude-usage.overview",
+      "Name": "Overview",
+      "Tooltip": "Session and weekly bars with reset times, plus tokens. Push or tap to refresh.",
+      "Icon": "imgs/action",
+      "Controllers": ["Encoder", "Keypad"],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [{ "Image": "imgs/key", "ShowTitle": false }],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": { "Push": "Refresh", "Touch": "Refresh" }
+      }
+    }
+  ]
+}

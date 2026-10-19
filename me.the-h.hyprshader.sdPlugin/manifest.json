@@ -1,0 +1,30 @@
+{
+  "UUID": "me.the-h.hyprshader",
+  "Name": "Hyprland Shader",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Cycle or toggle Hyprland screen shaders from ~/.config/hypr/shaders",
+  "Icon": "imgs/plugin",
+  "Category": "Hyprland Shader",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": { "Version": "22" },
+  "SDKVersion": 2,
+  "Software": { "MinimumVersion": "6.4" },
+  "OS": [{ "Platform": "linux", "MinimumVersion": "5.0" }],
+  "Actions": [
+    {
+      "UUID": "me.the-h.hyprshader.shader",
+      "Name": "Hyprland Shader",
+      "Tooltip": "Cycle through shaders (turn to pick, push to toggle) or toggle one shader",
+      "Icon": "imgs/action",
+      "Controllers": ["Keypad", "Encoder"],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [{ "Image": "imgs/key", "ShowTitle": false }],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": { "Rotate": "Pick a shader", "Push": "On / off", "Touch": "On / off" }
+      }
+    }
+  ]
+}

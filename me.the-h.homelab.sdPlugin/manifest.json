@@ -1,0 +1,59 @@
+{
+  "UUID": "me.the-h.homelab",
+  "Name": "Homelab",
+  "Version": "0.1.0",
+  "Author": "Amir H",
+  "Description": "Prometheus stats, web service health checks and qBittorrent control for a self-hosted homelab",
+  "Icon": "imgs/plugin",
+  "Category": "Homelab",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": { "Version": "22" },
+  "SDKVersion": 2,
+  "Software": { "MinimumVersion": "6.4" },
+  "OS": [
+    { "Platform": "linux", "MinimumVersion": "5.0" },
+    { "Platform": "mac", "MinimumVersion": "12" }
+  ],
+  "Actions": [
+    {
+      "UUID": "me.the-h.homelab.stat",
+      "Name": "Prometheus stat",
+      "Tooltip": "Shows the result of a PromQL query, coloured by thresholds. Press to open the link (or refresh).",
+      "Icon": "imgs/action",
+      "Controllers": ["Keypad", "Encoder"],
+      "PropertyInspectorPath": "pi/stat.html",
+      "States": [{ "Image": "imgs/key", "ShowTitle": false }],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": { "Push": "Open link / refresh", "Touch": "Refresh" }
+      }
+    },
+    {
+      "UUID": "me.the-h.homelab.services",
+      "Name": "Service health",
+      "Tooltip": "Up/down dots for a list of web services. Press to re-check.",
+      "Icon": "imgs/action",
+      "Controllers": ["Keypad", "Encoder"],
+      "PropertyInspectorPath": "pi/services.html",
+      "States": [{ "Image": "imgs/key", "ShowTitle": false }],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": { "Push": "Re-check", "Touch": "Re-check" }
+      }
+    },
+    {
+      "UUID": "me.the-h.homelab.qbittorrent",
+      "Name": "qBittorrent",
+      "Tooltip": "Download/upload speed. Press to stop or start all torrents; tap the strip to toggle alternative speed limits.",
+      "Icon": "imgs/action",
+      "Controllers": ["Keypad", "Encoder"],
+      "PropertyInspectorPath": "pi/qbittorrent.html",
+      "States": [{ "Image": "imgs/key", "ShowTitle": false }],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": { "Push": "Stop / start all", "Touch": "Alt speed limits" }
+      }
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  select { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+  <label>Mode
+    <select data-key="mode">
+      <option value="dial">Cycle — turn to pick, push to toggle</option>
+      <option value="toggle">One shader — press to toggle</option>
+    </select>
+  </label>
+  <label>Shaders from
+    <select data-key="folder">
+      <option value="">~/.config/hypr/shaders</option>
+      <option value="animated">~/.config/hypr/shaders/animated</option>
+    </select>
+  </label>
+  <label id="shader-row" hidden>Shader <select data-key="shader"><option value="">Choose a shader…</option></select></label>
+  <p class="note" id="dial-note">Turning the dial picks a shader; pushing it (or tapping the strip) turns it on or off.</p>
+
+<script>
+let ws, context, settings = {};
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const fields = [...document.querySelectorAll("[data-key]")];
+const shaderSelect = document.querySelector('[data-key="shader"]');
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  context = uuid;
+  settings = JSON.parse(actionInfoJson).payload.settings || {};
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => { send({ event: registerEvent, uuid }); requestList(); };
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+    if (msg.event === "sendToPropertyInspector" && msg.payload?.shaders) fillShaders(msg.payload.shaders);
+  };
+}
+
+function requestList() {
+  send({ event: "sendToPlugin", context, payload: { command: "list", folder: settings.folder || "" } });
+}
+
+function fillShaders(list) {
+  shaderSelect.replaceChildren(new Option("Choose a shader…", ""), ...list.map((s) => new Option(s.name, s.path)));
+  shaderSelect.value = settings.shader || "";
+}
+
+function render() {
+  const toggle = settings.mode === "toggle";
+  for (const el of fields) {
+    if (document.activeElement !== el) el.value = settings[el.dataset.key] ?? (el.dataset.key === "mode" ? "dial" : "");
+  }
+  document.getElementById("shader-row").hidden = !toggle;
+  document.getElementById("dial-note").hidden = toggle;
+}
+
+function save(e) {
+  for (const el of fields) settings[el.dataset.key] = el.value;
+  send({ event: "setSettings", context, payload: settings });
+  render();
+  if (e.target.dataset.key === "folder") requestList();
+}
+
+for (const el of fields) el.addEventListener("change", save);
+</script>
+</body>
+</html>

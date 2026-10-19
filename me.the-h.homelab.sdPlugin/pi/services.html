@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input, textarea { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+  textarea { font-family: ui-monospace, monospace; font-size: 12px; resize: vertical; min-height: 120px; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; }
+</style>
+</head>
+<body>
+  <label>Label <input data-key="label" type="text" placeholder="SERVICES"></label>
+  <label>Services <textarea data-key="services" placeholder="Grafana=http://localhost:3000&#10;Home Assistant=http://homeassistant.local:8123"></textarea></label>
+  <label>Every (s) <input data-key="interval" type="number" min="10" placeholder="60"></label>
+  <p class="note">One per line as <code>Name=URL</code>. Any HTTP answer below 500 (including redirects
+    and login pages) counts as up. Six fit on a key; press it to re-check now.</p>
+
+<script>
+let ws, context, settings = {};
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const fields = [...document.querySelectorAll("[data-key]")];
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  context = uuid;
+  settings = JSON.parse(actionInfoJson).payload.settings || {};
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => send({ event: registerEvent, uuid });
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+  };
+}
+
+function render() {
+  for (const el of fields) {
+    if (document.activeElement === el) continue;
+    const v = settings[el.dataset.key];
+    el.value = v ?? "";
+  }
+}
+
+function save() {
+  for (const el of fields) settings[el.dataset.key] = el.value;
+  send({ event: "setSettings", context, payload: settings });
+}
+
+for (const el of fields) el.addEventListener("input", save);
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# Packaged builds
+dist/
+*.streamDeckPlugin
+node_modules/

@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  select, input[type=text] { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; }
+  input[type=checkbox] { justify-self: start; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <label>Account
+    <select id="configDir"></select>
+  </label>
+  <label>Label <input id="label" type="text" placeholder="default caption"></label>
+  <div id="tokenOpts" class="hidden">
+    <label>Token window
+      <select id="window">
+        <option value="session">Current session (5h)</option>
+        <option value="week">Current week (7d)</option>
+        <option value="today">Today</option>
+      </select>
+    </label>
+    <label>Count cache reads <input id="cacheReads" type="checkbox"></label>
+    <p class="note">Tokens come from Claude Code's local transcripts on this machine. Cache reads are
+      usually 90%+ of the raw total, so they're left out by default.</p>
+  </div>
+  <p class="note">Account is a Claude Code config dir: ~/.claude for plain <code>claude</code>, or the
+    CLAUDE_CONFIG_DIR of another login (e.g. <code>~/.claude-work</code>). Limits come from that account and refresh every 5 minutes. Press the key
+    (or push the dial) to refresh now.</p>
+
+<script>
+let ws, context, settings = {}, accounts = [];
+const $ = (id) => document.getElementById(id);
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  context = uuid;
+  const actionInfo = JSON.parse(actionInfoJson);
+  settings = actionInfo.payload.settings || {};
+  const action = actionInfo.action || "";
+  $("tokenOpts").classList.toggle("hidden", !/\.(tokens|overview)$/.test(action));
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => {
+    send({ event: registerEvent, uuid });
+    // Ask once we're connected: the host's propertyInspectorDidAppear can arrive before this socket exists.
+    send({ event: "sendToPlugin", context, payload: { command: "getAccounts" } });
+  };
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+    if (msg.event === "sendToPropertyInspector" && msg.payload.accounts) { accounts = msg.payload.accounts; render(); }
+  };
+}
+
+function render() {
+  const dir = settings.configDir || "~/.claude";
+  const list = accounts.some((a) => a.dir === dir) ? accounts : [{ dir, plan: "" }, ...accounts];
+  $("configDir").innerHTML = list
+    .map((a) => `<option value="${a.dir}">${a.dir}${a.plan ? ` (${a.plan})` : ""}</option>`).join("");
+  $("configDir").value = dir;
+  if (document.activeElement !== $("label")) $("label").value = settings.label || "";
+  $("window").value = settings.window || "session";
+  $("cacheReads").checked = !!settings.cacheReads;
+}
+
+function saveSettings() {
+  settings = { ...settings, configDir: $("configDir").value, label: $("label").value, window: $("window").value, cacheReads: $("cacheReads").checked };
+  send({ event: "setSettings", context, payload: settings });
+}
+
+$("configDir").addEventListener("change", saveSettings);
+$("label").addEventListener("input", saveSettings);
+$("window").addEventListener("change", saveSettings);
+$("cacheReads").addEventListener("change", saveSettings);
+</script>
+</body>
+</html>

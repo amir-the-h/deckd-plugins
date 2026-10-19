@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  select, input, textarea { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+  textarea { font-family: ui-monospace, monospace; font-size: 12px; resize: vertical; min-height: 54px; }
+  h4 { margin: 14px 0 8px; color: #9a9a9a; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .row label { grid-template-columns: 60px 1fr; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; }
+  button { background: #4a4a4a; border: 1px solid #666; color: inherit; border-radius: 4px; padding: 4px 10px; }
+  #result { font-family: ui-monospace, monospace; font-size: 12px; margin-left: 8px; }
+</style>
+</head>
+<body>
+  <label>Label <input data-key="label" type="text"></label>
+  <label>PromQL <textarea data-key="query" placeholder='100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle"}[1m])))'></textarea></label>
+  <div class="row">
+    <label>Format
+      <select data-key="format">
+        <option value="number">Number</option>
+        <option value="percent">Percent</option>
+        <option value="bytes">Bytes</option>
+        <option value="bytes_rate">Bytes / s</option>
+        <option value="bitrate">Bits / s</option>
+        <option value="ok">OK / FAIL (≥ 1 is OK)</option>
+      </select>
+    </label>
+    <label>Decimals <input data-key="decimals" type="number" min="0" max="4" placeholder="auto"></label>
+  </div>
+  <div class="row">
+    <label>Unit <input data-key="unit" type="text" placeholder="e.g. kcal"></label>
+    <label>Gauge max <input data-key="max" type="number" placeholder="none"></label>
+  </div>
+
+  <h4>Thresholds</h4>
+  <div class="row">
+    <label>Warn <input data-key="warn" type="number"></label>
+    <label>Critical <input data-key="crit" type="number"></label>
+  </div>
+  <div class="row">
+    <label>Bad when
+      <select data-key="dir">
+        <option value="above">≥ threshold</option>
+        <option value="below">≤ threshold</option>
+      </select>
+    </label>
+    <label>Colour <input data-key="color" type="text" placeholder="#f2f2f2"></label>
+  </div>
+
+  <h4>Bottom line</h4>
+  <label>Detail query <textarea data-key="detailQuery" placeholder="optional second PromQL"></textarea></label>
+  <label>Detail text <input data-key="detailText" type="text" placeholder="{v} — e.g. ate {v}"></label>
+  <div class="row">
+    <label>Format
+      <select data-key="detailFormat">
+        <option value="number">Number</option>
+        <option value="percent">Percent</option>
+        <option value="bytes">Bytes</option>
+        <option value="bytes_rate">Bytes / s</option>
+        <option value="bitrate">Bits / s</option>
+      </select>
+    </label>
+    <label>Decimals <input data-key="detailDecimals" type="number" min="0" max="4" placeholder="0"></label>
+  </div>
+
+  <h4>Other</h4>
+  <label>Open on press <input data-key="url" type="text" placeholder="https://… (empty = refresh)"></label>
+  <label>If no data <input data-key="empty" type="number" placeholder="show —"></label>
+  <div class="row">
+    <label>Every (s) <input data-key="interval" type="number" min="5" placeholder="30"></label>
+    <label>Server <input data-key="server" type="text"></label>
+  </div>
+  <label>Default server <input data-global="prometheus" type="text" placeholder="http://localhost:9090"></label>
+  <p class="note">The default Prometheus server is shared by every stat button; set Server only to override it for this one.</p>
+  <p><button id="test">Test query</button><span id="result"></span></p>
+
+<script>
+let ws, context, settings = {}, globals = {};
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const fields = [...document.querySelectorAll("[data-key]")];
+const globalFields = [...document.querySelectorAll("[data-global]")];
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  context = uuid;
+  settings = JSON.parse(actionInfoJson).payload.settings || {};
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => { send({ event: registerEvent, uuid }); send({ event: "getGlobalSettings", context }); };
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+    if (msg.event === "didReceiveGlobalSettings") { globals = msg.payload.settings || {}; render(); }
+    if (msg.event === "sendToPropertyInspector" && "test" in msg.payload) {
+      const t = msg.payload.test || {};
+      document.getElementById("result").textContent = t.error ? `error: ${t.error}` : `value ${t.value}${t.detail != null ? `, detail ${t.detail}` : ""}`;
+    }
+  };
+}
+
+function render() {
+  for (const el of globalFields) if (document.activeElement !== el) el.value = globals[el.dataset.global] ?? "";
+  document.querySelector('[data-key="server"]').placeholder = `default: ${globals.prometheus || "http://localhost:9090"}`;
+  for (const el of fields) {
+    if (document.activeElement === el) continue;
+    const v = settings[el.dataset.key];
+    el.value = v ?? (el.tagName === "SELECT" ? el.options[0].value : "");
+  }
+}
+
+function save() {
+  for (const el of fields) settings[el.dataset.key] = el.value;
+  send({ event: "setSettings", context, payload: settings });
+}
+
+for (const el of fields) el.addEventListener(el.tagName === "SELECT" ? "change" : "input", save);
+document.getElementById("test").addEventListener("click", () => {
+  document.getElementById("result").textContent = "…";
+  send({ event: "sendToPlugin", context, payload: { command: "test" } });
+});
+for (const el of globalFields) el.addEventListener("input", () => {
+  globals = { ...globals, [el.dataset.global]: el.value };
+  send({ event: "setGlobalSettings", context, payload: globals });
+});
+</script>
+</body>
+</html>
