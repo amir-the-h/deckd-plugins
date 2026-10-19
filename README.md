@@ -17,7 +17,18 @@ need Node.js ≥ 22.
 
 ## Install
 
-Link a plugin into deckd while trying it out, so edits apply without
+In deckd's UI, go to **Plugins → Plugin sources** and add this repository:
+
+```
+https://github.com/amir-the-h/deckd-plugins
+```
+
+Every plugin here is then listed with an **Install** button, and new releases
+show up as updates. Single plugins can also be installed from a release's
+download link (**Plugins**, paste the link) or with
+`deckd install <link>`.
+
+To work on a plugin, link its folder into deckd instead, so edits apply without
 reinstalling:
 
 ```bash
@@ -26,12 +37,9 @@ ln -s "$PWD/deckd-plugins/me.the-h.obs.sdPlugin" ~/.config/deckd/plugins/
 systemctl --user restart deckd
 ```
 
-Or build installable packages and add them from deckd's UI
-(**Plugins → Install plugin or icon pack…**) or with `deckd install`:
-
-```bash
-scripts/pack.sh        # writes dist/<uuid>.streamDeckPlugin for every plugin
-```
+`scripts/pack.sh` builds `dist/<uuid>.streamDeckPlugin` for every plugin plus
+the `dist/index.json` deckd reads; pushing a `v*` tag publishes both as a
+release.
 
 Each plugin then appears in the **Actions** tab of the deckd UI. Drag an action
 onto a key or dial and click it to open its settings. Settings marked "all

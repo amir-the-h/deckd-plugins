@@ -1,0 +1,39 @@
+# Publish the plugins when a version tag (vX.Y.Z) is pushed. The release holds one
+# .streamDeckPlugin per plugin plus index.json, so deckd can use this repository as a
+# plugin source: https://github.com/amir-the-h/deckd-plugins
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create releases
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check plugins
+        run: for f in */plugin.js */lights.js; do node --check "$f"; done
+
+      - name: Package
+        run: scripts/pack.sh
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.streamDeckPlugin
+            dist/index.json
+          generate_release_notes: true
+          body: |
+            Add this repository as a plugin source in deckd (Plugins → Plugin sources):
+            `https://github.com/amir-the-h/deckd-plugins`
