@@ -2,7 +2,8 @@
 // (Node >= 22, no deps). Talks to OBS's built-in WebSocket server (obs-websocket 5.x; OBS 28 or newer).
 //
 // One connection serves every button. State comes from OBS's events, so buttons stay in sync when
-// you change things in OBS itself.
+// you change things in OBS itself. The connection stays open when the buttons leave the deck (OBS
+// announces every connect and disconnect), but is only retried while a button is visible.
 
 const crypto = require("node:crypto");
 
@@ -52,6 +53,7 @@ const obs = {
   nextId: 1,
   pending: new Map(), // requestId -> { resolve, reject, timer }
   retry: null,
+  waiters: new Set(), // { resolve, reject, timer } waiting for the connection
 };
 
 /** What OBS currently reports; buttons draw from this. */
@@ -66,7 +68,7 @@ const live = {
 
 function connect() {
   clearTimeout(obs.retry);
-  if (obs.ws || !globals || !instances.size) return;
+  if (obs.ws || !globals) return;
   const ws = new WebSocket(obsUrl());
   obs.ws = ws;
   ws.onmessage = (m) => onObsMessage(ws, JSON.parse(m.data));
@@ -83,6 +85,7 @@ function connect() {
     }
     for (const p of obs.pending.values()) p.reject(new Error("disconnected"));
     obs.pending.clear();
+    for (const w of obs.waiters) w.reject(new Error(OFFLINE[obs.error] || "not connected to OBS"));
     drawAll();
     if (instances.size) obs.retry = setTimeout(connect, RETRY_MS);
   };
@@ -121,6 +124,7 @@ function onObsMessage(ws, { op, d }) {
     case 2: // Identified
       obs.ready = true;
       obs.error = "";
+      for (const w of obs.waiters) w.resolve();
       log(`connected to OBS at ${obsUrl()}`);
       loadState().catch((e) => log(`reading OBS state: ${e.message}`));
       break;
@@ -137,6 +141,20 @@ function onObsMessage(ws, { op, d }) {
       break;
     }
   }
+}
+
+/** Connects if needed and resolves once OBS has accepted us. */
+function whenReady() {
+  if (obs.ready) return Promise.resolve();
+  connect();
+  return new Promise((resolve, reject) => {
+    const w = {
+      resolve: () => { clearTimeout(w.timer); obs.waiters.delete(w); resolve(); },
+      reject: (e) => { clearTimeout(w.timer); obs.waiters.delete(w); reject(e); },
+    };
+    w.timer = setTimeout(() => w.reject(new Error(OFFLINE[obs.error] || "not connected to OBS")), REQUEST_TIMEOUT_MS);
+    obs.waiters.add(w);
+  });
 }
 
 function request(requestType, requestData) {
@@ -407,7 +425,6 @@ function handle(msg) {
     case "willDisappear":
       instances.delete(ctx);
       lastImage.delete(ctx);
-      if (!instances.size) disconnect();
       break;
     case "didReceiveSettings": {
       const inst = remember(msg);
@@ -439,12 +456,13 @@ function handle(msg) {
     case "sendToPlugin":
       // The settings panel asks for OBS's scenes and inputs to fill its pickers.
       if (msg.payload?.command === "lists") {
-        Promise.all([request("GetSceneList"), request("GetInputList")])
+        whenReady()
+          .then(() => Promise.all([request("GetSceneList"), request("GetInputList")]))
           .then(([scenes, inputs]) => ({
             scenes: scenes.scenes.map((s) => s.sceneName).reverse(), // OBS lists them bottom-up
             inputs: inputs.inputs.map((i) => i.inputName),
           }))
-          .catch((e) => ({ error: obs.ready ? e.message : OFFLINE[obs.error] || "not connected to OBS" }))
+          .catch((e) => ({ error: e.message }))
           .then((payload) => send({ event: "sendToPropertyInspector", context: ctx, payload }));
       }
       break;

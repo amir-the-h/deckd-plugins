@@ -60,6 +60,10 @@ authentication is on, the password in any OBS button's settings.
 - **Stats**: frame rate, CPU use and dropped frames.
 
 Buttons follow changes made in OBS itself, and reconnect when OBS restarts.
+The connection stays open after you leave a page with OBS buttons, so OBS
+doesn't announce a new connection every time you come back. To turn those
+announcements off entirely, untick **Enable System Tray Alerts** in OBS's
+WebSocket Server Settings.
 
 ## Discord Voice
 
