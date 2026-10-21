@@ -1,7 +1,7 @@
 {
   "UUID": "me.the-h.obs",
   "Name": "OBS Control",
-  "Version": "1.0.1",
+  "Version": "1.0.2",
   "Author": "Amir H",
   "Description": "Switch scenes, start and stop recording, streaming and the replay buffer, mute and set input volumes, and watch performance in OBS Studio",
   "Icon": "imgs/plugin",

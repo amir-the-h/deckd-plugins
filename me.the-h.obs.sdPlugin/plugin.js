@@ -38,6 +38,7 @@ const kindOf = (action) => action.slice(args.pluginUUID.length + 1);
 const RETRY_MS = 5_000;
 const STATS_MS = 2_000;
 const REQUEST_TIMEOUT_MS = 5_000;
+const CONNECT_TIMEOUT_MS = 10_000;
 // Event subscriptions: Scenes (4) | Inputs (8) | Outputs (64).
 const EVENTS = 4 | 8 | 64;
 
@@ -53,6 +54,7 @@ const obs = {
   nextId: 1,
   pending: new Map(), // requestId -> { resolve, reject, timer }
   retry: null,
+  handshake: null, // gives up on a connection attempt that never completes
   waiters: new Set(), // { resolve, reject, timer } waiting for the connection
 };
 
@@ -72,28 +74,41 @@ function connect() {
   const ws = new WebSocket(obsUrl());
   obs.ws = ws;
   ws.onmessage = (m) => onObsMessage(ws, JSON.parse(m.data));
-  ws.onclose = (e) => {
-    if (obs.ws !== ws) return;
-    obs.ws = null;
-    obs.ready = false;
-    // 4009 = authentication failed; a missing password was already flagged in onObsMessage.
-    if (e.code === 4009) {
-      obs.error = "password";
-      log("OBS rejected the password");
-    } else if (obs.error !== "password") {
-      obs.error = "offline";
-    }
-    for (const p of obs.pending.values()) p.reject(new Error("disconnected"));
-    obs.pending.clear();
-    for (const w of obs.waiters) w.reject(new Error(OFFLINE[obs.error] || "not connected to OBS"));
-    drawAll();
-    if (instances.size) obs.retry = setTimeout(connect, RETRY_MS);
-  };
+  ws.onclose = (e) => closed(ws, e.code);
   ws.onerror = () => {}; // onclose follows and handles it
+  // A socket opened while OBS is still starting can sit in CONNECTING forever, and nothing would
+  // replace it, since connect() keeps the socket it has.
+  clearTimeout(obs.handshake);
+  obs.handshake = setTimeout(() => {
+    if (obs.ws !== ws || obs.ready) return;
+    log("OBS didn't answer; retrying");
+    closed(ws);
+    ws.close();
+  }, CONNECT_TIMEOUT_MS);
+}
+
+function closed(ws, code) {
+  if (obs.ws !== ws) return;
+  clearTimeout(obs.handshake);
+  obs.ws = null;
+  obs.ready = false;
+  // 4009 = authentication failed; a missing password was already flagged in onObsMessage.
+  if (code === 4009) {
+    obs.error = "password";
+    log("OBS rejected the password");
+  } else if (obs.error !== "password") {
+    obs.error = "offline";
+  }
+  for (const p of obs.pending.values()) p.reject(new Error("disconnected"));
+  obs.pending.clear();
+  for (const w of obs.waiters) w.reject(new Error(OFFLINE[obs.error] || "not connected to OBS"));
+  drawAll();
+  if (instances.size) obs.retry = setTimeout(connect, RETRY_MS);
 }
 
 function disconnect() {
   clearTimeout(obs.retry);
+  clearTimeout(obs.handshake);
   const ws = obs.ws;
   obs.ws = null;
   obs.ready = false;
@@ -122,6 +137,7 @@ function onObsMessage(ws, { op, d }) {
       break;
     }
     case 2: // Identified
+      clearTimeout(obs.handshake);
       obs.ready = true;
       obs.error = "";
       for (const w of obs.waiters) w.resolve();
@@ -272,13 +288,16 @@ ${icon(path, color, 44, 40, 56)}
 </svg>`;
 }
 
-/** A dial strip: icon on the left, label and value on the right, optional bar. */
-function stripSvg({ label, path, color, value, valueColor = TEXT, bar }) {
+/** A dial strip: icon on the left, label and value on the right, optional bar. Without a label the
+ *  value is centred. */
+function stripSvg({ label, stripLabel = label, path, color, value, valueColor = TEXT, bar, border }) {
+  const x = border ? 188 : 194; // keep text clear of the border
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
 <rect width="200" height="100" fill="${BG}"/>
+${border ? `<rect x="3" y="3" width="194" height="94" rx="10" fill="none" stroke="${border}" stroke-width="5"/>` : ""}
 ${icon(path, color, 8, 22, 44)}
-<text x="194" y="30" ${FONT} font-size="16" font-weight="600" text-anchor="end" fill="${DIM}">${esc(label)}</text>
-<text x="194" y="64" ${FONT} font-size="24" font-weight="700" text-anchor="end" fill="${valueColor}">${esc(value)}</text>
+${stripLabel ? `<text x="${x}" y="30" ${FONT} font-size="16" font-weight="600" text-anchor="end" fill="${DIM}">${esc(stripLabel)}</text>` : ""}
+<text x="${x}" y="${stripLabel ? 64 : 58}" ${FONT} font-size="${stripLabel ? 24 : 22}" font-weight="700" text-anchor="end" fill="${valueColor}">${esc(value)}</text>
 ${bar == null ? "" : `<rect x="8" y="80" width="186" height="8" rx="4" fill="#2a2a2a"/><rect x="8" y="80" width="${Math.max(0, Math.min(1, bar)) * 186}" height="8" rx="4" fill="${color}"/>`}
 </svg>`;
 }
@@ -297,7 +316,9 @@ function view(inst) {
   switch (kind) {
     case "scene": {
       const on = s.scene && live.scene === s.scene;
-      return { label: s.label || short(s.scene || "Scene"), path: PATHS.scene, color: on ? GREEN : DIM, status: s.scene ? (on ? "LIVE" : "") : "choose scene", statusColor: GREEN, border: on && GREEN, value: on ? "LIVE" : short(s.scene || "—", 14) };
+      return { label: s.label || short(s.scene || "Scene"), path: PATHS.scene, color: on ? GREEN : DIM, status: s.scene ? (on ? "LIVE" : "") : "choose scene", statusColor: GREEN, border: on && GREEN,
+        // On a dial the name is the only text; green and a border mark the live scene.
+        stripLabel: "", value: short(s.label || s.scene || "—", 11), valueColor: on ? GREEN : TEXT };
     }
     case "record":
       return toggleView(s.label || "Record", PATHS.record, live.record, "REC", RED);
