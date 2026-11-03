@@ -47,16 +47,28 @@ class HomeAssistant {
       try { msg = JSON.parse(m.data); } catch { return; }
       for (const one of Array.isArray(msg) ? msg : [msg]) this.receive(one);
     };
-    ws.onclose = () => {
-      clearInterval(this.pinger);
-      for (const p of this.pending.values()) { clearTimeout(p.timer); p.reject(new Error("disconnected")); }
-      this.pending.clear();
-      if (this.ws !== ws) return;
-      this.ws = null;
-      if (this.status !== "auth") this.setStatus("offline");
-      this.retry();
-    };
-    ws.onerror = () => {}; // onclose follows
+    // A failed handshake (e.g. a proxy answering 502 while Home Assistant restarts) fires only
+    // "error", never "close", and leaves the socket CONNECTING for good; a dead connection may
+    // never close either. Every way of losing the socket goes through lost(), which retries once.
+    ws.onclose = () => this.lost(ws);
+    ws.onerror = () => this.lost(ws);
+    clearTimeout(this.handshake);
+    this.handshake = setTimeout(() => {
+      if (this.ws === ws && this.status !== "connected") this.lost(ws);
+    }, CALL_TIMEOUT_MS);
+  }
+
+  // Drops `ws` (if it is still the current socket) and schedules a reconnect.
+  lost(ws) {
+    if (this.ws !== ws) return;
+    this.ws = null;
+    clearTimeout(this.handshake);
+    clearInterval(this.pinger);
+    for (const p of this.pending.values()) { clearTimeout(p.timer); p.reject(new Error("disconnected")); }
+    this.pending.clear();
+    try { ws.close(); } catch {}
+    if (this.status !== "auth") this.setStatus("offline");
+    this.retry();
   }
 
   retry() {
@@ -78,7 +90,7 @@ class HomeAssistant {
       case "auth_invalid":
         this.log(`home assistant: ${msg.message || "invalid token"}`);
         this.setStatus("auth");
-        this.ws?.close();
+        this.lost(this.ws);
         break;
       case "auth_ok":
         this.backoff = RECONNECT_MIN_MS;
@@ -86,7 +98,10 @@ class HomeAssistant {
         this.subscription = this.nextId;
         this.send({ id: this.nextId++, type: "subscribe_entities" });
         clearInterval(this.pinger);
-        this.pinger = setInterval(() => this.request({ type: "ping" }).catch(() => this.ws?.close()), PING_MS);
+        this.pinger = setInterval(() => {
+          const ws = this.ws;
+          this.request({ type: "ping" }).catch(() => this.lost(ws));
+        }, PING_MS);
         break;
       case "event":
         if (msg.id === this.subscription) this.applyEvent(msg.event);
@@ -159,6 +174,7 @@ class HomeAssistant {
   close() {
     this.closed = true;
     clearTimeout(this.retryTimer);
+    clearTimeout(this.handshake);
     clearInterval(this.pinger);
     this.ws?.close();
   }

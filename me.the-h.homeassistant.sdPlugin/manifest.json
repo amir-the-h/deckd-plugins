@@ -1,7 +1,7 @@
 {
   "UUID": "me.the-h.homeassistant",
   "Name": "Home Assistant",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "Author": "Amir H",
   "Description": "Live Home Assistant entity states with one-press control, dial adjustments, service calls and robot vacuum room cleaning",
   "Icon": "imgs/plugin",
