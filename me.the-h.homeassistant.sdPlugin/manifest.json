@@ -1,0 +1,104 @@
+{
+  "UUID": "me.the-h.homeassistant",
+  "Name": "Home Assistant",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Live Home Assistant entity states with one-press control, dial adjustments, service calls and robot vacuum room cleaning",
+  "Icon": "imgs/plugin",
+  "Category": "Home Assistant",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": {
+    "Version": "22"
+  },
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.4"
+  },
+  "OS": [
+    {
+      "Platform": "linux",
+      "MinimumVersion": "5.0"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
+  ],
+  "Actions": [
+    {
+      "UUID": "me.the-h.homeassistant.entity",
+      "Name": "Entity",
+      "Tooltip": "Any entity's live state. Press to toggle it, run it, start or dock it, play or pause it; on a dial, turn to adjust brightness, speed, volume, temperature or position.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Rotate": "Adjust",
+          "Push": "Toggle / run",
+          "Touch": "Toggle / run"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.homeassistant.service",
+      "Name": "Service Call",
+      "Tooltip": "Calls a Home Assistant service with your data, optionally showing an entity's state.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Push": "Call the service",
+          "Touch": "Call the service"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.homeassistant.vacuum",
+      "Name": "Vacuum",
+      "Tooltip": "A robot vacuum's state, battery and charging. Press to clean (on a dial, the room you turned to) or pause/resume; hold to stop and send it to its dock.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Rotate": "Pick a room",
+          "Push": "Clean / pause; hold to dock",
+          "Touch": "Clean / pause"
+        }
+      }
+    }
+  ]
+}

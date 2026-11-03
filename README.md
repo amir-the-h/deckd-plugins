@@ -18,6 +18,7 @@ need Node.js ≥ 22.
 | [Meeting Countdown](#meeting-countdown) | Countdown to your next meeting from a calendar feed, with one-press join |
 | [Claude Code Sessions](#claude-code-sessions) | Which Claude Code sessions are working, need you or are done |
 | [Docker Control](#docker-control) | Health of compose stacks and containers, with start, stop and restart |
+| [Home Assistant](#home-assistant) | Live entity states, one-press control, dial adjustments and service calls |
 
 ## Install
 
@@ -266,11 +267,39 @@ proxy, or your Portainer URL together with a Portainer access token (**My
 account → Access tokens**). Containers you keep stopped on purpose can be listed
 under Ignore so they don't count as down.
 
+## Home Assistant
+
+Live states from [Home Assistant](https://www.home-assistant.io) over its
+WebSocket API, so buttons change the moment something changes in the house.
+
+- **Entity**: any entity's state, with a level bar where it has one
+  (brightness, fan speed, volume, cover position, battery). Pressing does what
+  suits it: toggles lights, switches, fans, covers and booleans, runs scripts,
+  activates scenes, presses buttons, locks or unlocks, plays or pauses media,
+  starts or docks a vacuum. On a dial, turning adjusts brightness, fan speed,
+  volume, target temperature, cover position or a number. A button can show one
+  of the entity's attributes instead of its state (e.g. `battery_level`).
+- **Service Call**: calls any service, with JSON data and an optional target
+  entity, and can show an entity's state while it waits for the next press.
+- **Vacuum**: a robot vacuum's state, battery and charging, plus cleaned area
+  and time while it cleans. Press to start, or to pause and resume; hold for a
+  second to stop it and send it to its dock (or, if set, stop where it is). On
+  a dial, turn to pick a room from the vacuum's map, then press to clean just
+  that room. Rooms come from the vacuum's `rooms` attribute; the room-cleaning
+  call is found automatically for Dreame, Roborock and Xiaomi integrations, or
+  can be set by hand with `"$room"` standing for the room's id. Leave the slot's
+  gestures unset so the plugin can time the hold.
+
+Enter Home Assistant's address and a long-lived access token (your profile →
+**Security → Long-lived access tokens**) in any button's settings; the panel
+then offers your entities and services to pick from.
+
 ## Trademarks
 
 These plugins are independent and not affiliated with or endorsed by Elgato,
-Corsair, the OBS Project, Discord, qBittorrent, GitHub, Docker, Portainer or
-Anthropic. Product names are used only to say what each plugin works with.
+Corsair, the OBS Project, Discord, qBittorrent, GitHub, Docker, Portainer, Home
+Assistant or Anthropic. Product names are used only to say what each plugin
+works with.
 
 ## Writing your own
 

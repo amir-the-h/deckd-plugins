@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input, textarea, select { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+  textarea { font-family: ui-monospace, monospace; font-size: 12px; min-height: 48px; resize: vertical; }
+  h4 { margin: 14px 0 8px; font-size: 12px; font-weight: 600; color: #9a9a9a; text-transform: uppercase; letter-spacing: 0.05em; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; }
+  .bad { color: #e05a5a; }
+  code { color: #c8c8c8; }
+</style>
+</head>
+<body>
+  <label>Label <input data-key="label" type="text" placeholder="the entity's name"></label>
+  <label data-for="service">Service <input data-key="service" type="text" list="services" placeholder="e.g. script.feed_cat"></label>
+  <label>Entity <input data-key="entity" type="text" list="entities" placeholder="light.desk or vacuum.robot"></label>
+  <label data-for="service">Data (JSON) <textarea data-key="data" placeholder='{"amount": 1}'></textarea></label>
+  <label data-for="service">Show state of <input data-key="show" type="text" list="entities" placeholder="the entity above"></label>
+  <label data-for="entity service">Show attribute <input data-key="attribute" type="text" placeholder="e.g. battery_level"></label>
+  <label data-for="vacuum">Hold <select data-key="hold"><option value="">stop and go to the dock</option><option value="stop">stop where it is</option></select></label>
+  <label data-for="vacuum">Room service <input data-key="roomService" type="text" list="services" placeholder="automatic"></label>
+  <label data-for="vacuum">Room data (JSON) <textarea data-key="roomData" placeholder='{"segments": ["$room"]}'></textarea></label>
+  <p class="note" id="status"></p>
+  <datalist id="entities"></datalist>
+  <datalist id="services"></datalist>
+
+  <h4>All buttons</h4>
+  <label>Address <input data-global="url" type="text" placeholder="http://homeassistant.local:8123"></label>
+  <label>Access token <input data-global="token" type="password" placeholder="long-lived access token"></label>
+
+  <p class="note" data-for="entity">Press does what suits the entity: toggles lights, switches, fans and covers, runs
+    scripts, activates scenes, presses buttons, locks or unlocks, plays or pauses media, starts or docks a vacuum.
+    On a dial, turning adjusts brightness, fan speed, volume, target temperature, cover position or a number.
+    Show attribute displays one of the entity's attributes instead of its state.</p>
+  <p class="note" data-for="vacuum">Press to start cleaning, or pause and resume while it cleans; hold for a
+    second to stop it (leave the slot's gestures unset so the plugin can time the hold). On a dial, turn to pick
+    a room from the vacuum's map, then press to clean just that room. Rooms are read from the vacuum's
+    <code>rooms</code> attribute; the room-cleaning call is found automatically (Dreame, Roborock, Xiaomi) or set
+    by Room service and Room data, where <code>"$room"</code> stands for the room's id.</p>
+  <p class="note" data-for="service">Pressing calls the service on the entity (if set) with the data. The key shows
+    the state of "Show state of", or of the entity, when set.</p>
+  <p class="note">Create the token in Home Assistant under your profile → Security → Long-lived access tokens.
+    It is stored in plain text in deckd's plugin data, readable only by you.</p>
+
+<script>
+let ws, context, settings = {}, globals = {}, kind = "";
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const fields = [...document.querySelectorAll("[data-key]")];
+const globalFields = [...document.querySelectorAll("[data-global]")];
+const escape = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  const info = JSON.parse(actionInfoJson);
+  context = uuid;
+  kind = info.action.split(".").pop();
+  settings = info.payload.settings || {};
+  for (const el of document.querySelectorAll("[data-for]")) el.hidden = !el.dataset.for.split(" ").includes(kind);
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => {
+    send({ event: registerEvent, uuid });
+    send({ event: "getGlobalSettings", context });
+    send({ event: "sendToPlugin", context, payload: { request: "names" } });
+  };
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+    if (msg.event === "didReceiveGlobalSettings") { globals = msg.payload.settings || {}; render(); }
+    if (msg.event === "sendToPropertyInspector") names(msg.payload);
+  };
+}
+
+function names({ entities, services, status }) {
+  document.getElementById("entities").innerHTML = entities.map(([id, name]) => `<option value="${escape(id)}">${escape(name)}</option>`).join("");
+  document.getElementById("services").innerHTML = services.map((s) => `<option value="${escape(s)}">`).join("");
+  const el = document.getElementById("status");
+  el.className = status === "connected" ? "note" : "note bad";
+  el.textContent = status === "connected" ? `${entities.length} entities` : status === "auth" ? "Home Assistant refused the token." : "Not connected to Home Assistant yet.";
+}
+
+function render() {
+  for (const el of globalFields) if (document.activeElement !== el) el.value = globals[el.dataset.global] ?? "";
+  for (const el of fields) if (document.activeElement !== el) el.value = settings[el.dataset.key] ?? "";
+}
+
+for (const el of fields) el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => {
+  settings[el.dataset.key] = el.value.trim();
+  send({ event: "setSettings", context, payload: settings });
+});
+for (const el of globalFields) el.addEventListener("change", () => {
+  globals = { ...globals, [el.dataset.global]: el.value.trim() };
+  send({ event: "setGlobalSettings", context, payload: globals });
+  setTimeout(() => send({ event: "sendToPlugin", context, payload: { request: "names" } }), 2000);
+});
+</script>
+</body>
+</html>
