@@ -56,7 +56,7 @@ function account(dir) {
   if (!a) {
     a = {
       dir,
-      usage: { data: null, error: null, fetchedAt: 0, backoffUntil: 0 },
+      usage: { data: null, error: null, fetchedAt: 0, attemptedAt: 0, backoffUntil: 0 },
       files: new Map(),    // transcript path -> { offset, rest }
       messages: new Map(), // `${message.id}:${requestId}` -> { ts, input, output, cacheWrite, cacheRead }
       refreshing: null,
@@ -96,6 +96,7 @@ function readToken(a) {
 async function fetchUsage(a) {
   const usage = a.usage;
   if (Date.now() < usage.backoffUntil) return;
+  usage.attemptedAt = Date.now();
   try {
     let token;
     try { token = readToken(a); } catch (e) { throw e.code ? e : Object.assign(e, { code: "login" }); }
@@ -348,7 +349,10 @@ function startPolling() {
   if (pollTimer) return;
   pollTimer = setInterval(() => activeAccounts().forEach(refresh), POLL_MS);
   redrawTimer = setInterval(() => {
-    activeAccounts().forEach(scan);
+    for (const a of activeAccounts()) {
+      if (stale(a)) refresh(a);
+      else scan(a);
+    }
     drawAll();
   }, REDRAW_MS);
 }
@@ -358,9 +362,22 @@ function stopPolling() {
   pollTimer = redrawTimer = null;
 }
 
-// First sight of an account (new button, or a button switched to another account): fetch right away.
+// Due for a fetch: never fetched, older than a poll interval, or a window's reset time has passed
+// (the old numbers no longer apply). Failed attempts are retried at most every MANUAL_MIN_MS.
+// Checked whenever buttons appear and on every redraw tick, because focus-driven page switches
+// hide the buttons more often than POLL_MS and so keep restarting the poll timer before it fires.
+function stale(a) {
+  const u = a.usage, now = Date.now();
+  if (a.refreshing || now < u.backoffUntil || now - u.attemptedAt < MANUAL_MIN_MS) return false;
+  if (now - u.fetchedAt >= POLL_MS) return true;
+  return ["five_hour", "seven_day"].some((k) => {
+    const r = u.data?.[k]?.resets_at;
+    return r && Date.parse(r) <= now;
+  });
+}
+
 function ensureFresh(a) {
-  if (!a.usage.fetchedAt && !a.usage.error && !a.refreshing) refresh(a);
+  if (stale(a)) refresh(a);
 }
 
 async function manualRefresh(context) {
