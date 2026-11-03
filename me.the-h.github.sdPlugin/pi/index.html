@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input[type=text], input[type=password], input[type=number] { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+  h4 { margin: 14px 0 8px; font-size: 12px; font-weight: 600; color: #9a9a9a; text-transform: uppercase; letter-spacing: 0.05em; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; }
+</style>
+</head>
+<body>
+  <label>Label <input data-key="label" type="text"></label>
+  <label>Organizations <input data-key="org" type="text"></label>
+
+  <h4>All buttons</h4>
+  <label>Organizations <input data-global="org" type="text" placeholder="e.g. acme, acme-labs"></label>
+  <label>Minimum approvals <input data-global="minApprovals" type="number" min="1" max="10" placeholder="1"></label>
+  <label>Refresh every (s) <input data-global="interval" type="number" min="30" placeholder="60"></label>
+  <label>Token <input data-global="token" type="password" placeholder="uses the GitHub CLI login"></label>
+
+  <p class="note">Counts only open pull requests in these organizations (comma-separated; leave empty for all of GitHub).
+    Set Organizations on this button only to override the shared list.
+    Leave Token empty to use <code>gh auth login</code>'s account; otherwise use a token that can read the organization's
+    repositories and teams (classic: <code>repo</code>, <code>read:org</code>), authorized for SSO if the organization uses it.
+    The token is stored in plain text in deckd's plugin data.</p>
+  <p class="note">Draft pull requests are never counted. Press a key to refresh it.
+    On a dial, turn to step through the PRs; push or tap the strip to refresh.</p>
+
+<script>
+let ws, context, settings = {}, globals = {};
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const fields = [...document.querySelectorAll("[data-key]")];
+const globalFields = [...document.querySelectorAll("[data-global]")];
+const DEFAULT_LABELS = {
+  review: "REVIEW", needsreviews: "NEEDS REVIEWS", attention: "ATTENTION", ready: "READY TO MERGE", overview: "PULL REQUESTS",
+};
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  const info = JSON.parse(actionInfoJson);
+  context = uuid;
+  settings = info.payload.settings || {};
+  document.querySelector('[data-key="label"]').placeholder = DEFAULT_LABELS[info.action.split(".").pop()] || "";
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => { send({ event: registerEvent, uuid }); send({ event: "getGlobalSettings", context }); };
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+    if (msg.event === "didReceiveGlobalSettings") { globals = msg.payload.settings || {}; render(); }
+  };
+}
+
+const read = (el) => el.value;
+const write = (el, v) => { el.value = v ?? ""; };
+
+function render() {
+  for (const el of globalFields) if (document.activeElement !== el) write(el, globals[el.dataset.global]);
+  document.querySelector('[data-key="org"]').placeholder = globals.org ? `default: ${globals.org}` : "all";
+  for (const el of fields) if (document.activeElement !== el) write(el, settings[el.dataset.key]);
+}
+
+function save() {
+  for (const el of fields) settings[el.dataset.key] = read(el);
+  send({ event: "setSettings", context, payload: settings });
+}
+
+// Global changes refetch every button, so send them when a field is done rather than on each keystroke.
+for (const el of fields) el.addEventListener(el.dataset.key === "org" ? "change" : "input", save);
+for (const el of globalFields) el.addEventListener("change", () => {
+  globals = { ...globals, [el.dataset.global]: read(el) };
+  send({ event: "setGlobalSettings", context, payload: globals });
+});
+</script>
+</body>
+</html>

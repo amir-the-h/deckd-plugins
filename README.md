@@ -14,6 +14,7 @@ need Node.js ≥ 22.
 | [Server Monitor](#server-monitor) | Prometheus metrics and web service health checks |
 | [qBittorrent](#qbittorrent) | Transfer speeds and controls for your qBittorrent client |
 | [Claude Usage](#claude-usage) | Claude Code plan limits and token counts |
+| [GitHub Pull Requests](#github-pull-requests) | Open pull requests that need you, per organization |
 
 ## Install
 
@@ -164,10 +165,33 @@ works on Linux but not on macOS, where Claude Code keeps the token in the
 Keychain. Limits refresh every 5 minutes. Token counts are read from Claude
 Code's local transcripts and never leave your machine.
 
+## GitHub Pull Requests
+
+Counts the open pull requests that need you, optionally limited to one or more
+organizations:
+
+- **Review Requests**: PRs where your review is requested, either from you or
+  from a team you're on. The key shows how many came to you and how many to a team.
+- **Needs My Attention**: your PRs with failed CI, a merge conflict or
+  requested changes.
+- **Waiting for Approvals**: your PRs with fewer approvals than the minimum
+  you set (only reviews from people with write access count).
+- **Ready to Merge**: your PRs that have enough approvals, passing CI and no
+  conflicts.
+- **Pull Request Overview**: all four counts on one key or dial.
+
+Press a key to refresh it. On a dial, turn to step through the PRs; push or
+tap the strip to refresh.
+
+It signs in with the [GitHub CLI](https://cli.github.com)'s login
+(`gh auth login`) unless you enter a token in any button's settings. Draft PRs
+are never counted. Everything refreshes every 60 seconds, with
+one request for all buttons.
+
 ## Trademarks
 
 These plugins are independent and not affiliated with or endorsed by Elgato,
-Corsair, the OBS Project, Discord, qBittorrent or Anthropic. Product names are
+Corsair, the OBS Project, Discord, qBittorrent, GitHub or Anthropic. Product names are
 used only to say what each plugin works with.
 
 ## Writing your own

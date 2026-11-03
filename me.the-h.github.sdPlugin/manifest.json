@@ -1,0 +1,154 @@
+{
+  "UUID": "me.the-h.github",
+  "Name": "GitHub Pull Requests",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Open pull requests that need you: review requests, your PRs waiting on approvals, failing or conflicting, and ready to merge",
+  "Icon": "imgs/plugin",
+  "Category": "GitHub Pull Requests",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": {
+    "Version": "22"
+  },
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.4"
+  },
+  "OS": [
+    {
+      "Platform": "linux",
+      "MinimumVersion": "5.0"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
+  ],
+  "Actions": [
+    {
+      "UUID": "me.the-h.github.review",
+      "Name": "Review Requests",
+      "Tooltip": "PRs waiting on your review, requested from you or one of your teams. Press to refresh.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Rotate": "Step through PRs",
+          "Push": "Refresh",
+          "Touch": "Refresh"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.github.attention",
+      "Name": "Needs My Attention",
+      "Tooltip": "Your PRs with failed CI, a merge conflict or requested changes. Press to refresh.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Rotate": "Step through PRs",
+          "Push": "Refresh",
+          "Touch": "Refresh"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.github.needsreviews",
+      "Name": "Waiting for Approvals",
+      "Tooltip": "Your PRs with fewer approvals than the minimum you set. Press to refresh.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Rotate": "Step through PRs",
+          "Push": "Refresh",
+          "Touch": "Refresh"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.github.ready",
+      "Name": "Ready to Merge",
+      "Tooltip": "Your PRs that are approved, passing CI and mergeable. Press to refresh.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Rotate": "Step through PRs",
+          "Push": "Refresh",
+          "Touch": "Refresh"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.github.overview",
+      "Name": "Pull Request Overview",
+      "Tooltip": "All four counts on one button. Press to refresh.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Push": "Refresh",
+          "Touch": "Refresh"
+        }
+      }
+    }
+  ]
+}
