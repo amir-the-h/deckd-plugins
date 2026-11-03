@@ -1,0 +1,76 @@
+{
+  "UUID": "me.the-h.claude-sessions",
+  "Name": "Claude Code Sessions",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Which Claude Code sessions are working, need you or are done, and one press to bring a session up",
+  "Icon": "imgs/plugin",
+  "Category": "Claude Code Sessions",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": {
+    "Version": "22"
+  },
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.4"
+  },
+  "OS": [
+    {
+      "Platform": "linux",
+      "MinimumVersion": "5.0"
+    }
+  ],
+  "Actions": [
+    {
+      "UUID": "me.the-h.claude-sessions.session",
+      "Name": "Session",
+      "Tooltip": "One Claude Code session: its project, whether it's working, needs you or is done, and for how long. Press to bring it up.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Rotate": "Step through sessions",
+          "Push": "Bring up the session shown",
+          "Touch": "Bring up the session shown"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.claude-sessions.overview",
+      "Name": "Sessions Overview",
+      "Tooltip": "How many Claude Code sessions need you, are working or are done. Press to bring up the one that has needed you longest.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Rotate": "Step through sessions",
+          "Push": "Bring up the session highlighted",
+          "Touch": "Bring up the session highlighted"
+        }
+      }
+    }
+  ]
+}

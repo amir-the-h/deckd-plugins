@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; }
+  code { color: #c8c8c8; }
+</style>
+</head>
+<body>
+  <label>Label <input data-key="label" type="text" placeholder="project folder"></label>
+  <label>Position <input data-key="position" type="number" min="1" max="20" placeholder="1"></label>
+  <label>Account <input data-key="account" type="text" placeholder="all accounts"></label>
+
+  <p class="note">Position picks a session in the order they started: 1 is the oldest still running, 2 the next,
+    and so on. On a dial it's where turning starts. Account limits the button to one Claude Code login by its
+    config folder, e.g. <code>~/.claude</code> or the folder you set in <code>CLAUDE_CONFIG_DIR</code>.</p>
+  <p class="note">Sessions only show up once Claude Code runs this plugin's hook; see the plugin's README.
+    Pressing brings the session up: its tmux window and pane are selected, and on Hyprland its terminal
+    window is focused.</p>
+
+<script>
+let ws, context, settings = {};
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const fields = [...document.querySelectorAll("[data-key]")];
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  const info = JSON.parse(actionInfoJson);
+  context = uuid;
+  settings = info.payload.settings || {};
+  if (info.action.endsWith(".overview")) {
+    document.querySelector('[data-key="position"]').closest("label").hidden = true;
+    document.querySelector('[data-key="label"]').placeholder = "CLAUDE";
+  }
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => send({ event: registerEvent, uuid });
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+  };
+}
+
+function render() {
+  for (const el of fields) if (document.activeElement !== el) el.value = settings[el.dataset.key] ?? "";
+}
+
+for (const el of fields) el.addEventListener("input", () => {
+  settings[el.dataset.key] = el.value.trim();
+  send({ event: "setSettings", context, payload: settings });
+});
+</script>
+</body>
+</html>

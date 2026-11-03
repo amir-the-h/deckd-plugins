@@ -16,6 +16,7 @@ need Node.js ≥ 22.
 | [Claude Usage](#claude-usage) | Claude Code plan limits and token counts |
 | [GitHub Pull Requests](#github-pull-requests) | Open pull requests that need you, per organization |
 | [Meeting Countdown](#meeting-countdown) | Countdown to your next meeting from a calendar feed, with one-press join |
+| [Claude Code Sessions](#claude-code-sessions) | Which Claude Code sessions are working, need you or are done |
 
 ## Install
 
@@ -210,6 +211,34 @@ format**. Anyone with that address can read the calendar, so it is kept only in
 deckd's plugin data on your computer. Meetings you declined and all-day events
 are left out, and a `?` marks invites you haven't answered. The feed refreshes
 every 10 minutes.
+
+## Claude Code Sessions
+
+Shows what each running [Claude Code](https://claude.com/claude-code) session
+is doing: **working**, **needs you** (a permission prompt, a question or a plan
+to approve; it blinks), **done** (your turn), **idle** or **error**, with how
+long it has been that way.
+
+- **Session**: one session's project folder, state and time. Position 1 is the
+  oldest running session, 2 the next, and so on.
+- **Sessions Overview**: how many need you, are working or are done. On a dial
+  it lists the sessions; turn to pick one.
+
+Press to bring a session up: its tmux window and pane are selected (switching
+the attached tmux client if needed), and on Hyprland its terminal window is
+focused. The overview key brings up the session that has needed you longest.
+Each button can be limited to one Claude Code login by its config folder.
+
+The plugin learns about sessions from a Claude Code hook. Add it to each config
+folder you use (it backs up `settings.json` and keeps your other hooks):
+
+```bash
+~/.config/deckd/plugins/me.the-h.claude-sessions.sdPlugin/hooks/install.sh ~/.claude
+```
+
+Pass `--remove` to take it out again. The hook runs in the background and only
+writes a small state file per session to a private folder under
+`$XDG_RUNTIME_DIR`; nothing leaves your machine. Linux only.
 
 ## Trademarks
 
