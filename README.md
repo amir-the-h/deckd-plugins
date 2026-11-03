@@ -17,6 +17,7 @@ need Node.js ≥ 22.
 | [GitHub Pull Requests](#github-pull-requests) | Open pull requests that need you, per organization |
 | [Meeting Countdown](#meeting-countdown) | Countdown to your next meeting from a calendar feed, with one-press join |
 | [Claude Code Sessions](#claude-code-sessions) | Which Claude Code sessions are working, need you or are done |
+| [Docker Control](#docker-control) | Health of compose stacks and containers, with start, stop and restart |
 
 ## Install
 
@@ -240,11 +241,36 @@ Pass `--remove` to take it out again. The hook runs in the background and only
 writes a small state file per session to a private folder under
 `$XDG_RUNTIME_DIR`; nothing leaves your machine. Linux only.
 
+## Docker Control
+
+Health of your Docker compose stacks and containers, locally or on a server
+through Portainer.
+
+- **Stack**: how many of a compose project's containers run (`8/9`), and which
+  are down or unhealthy. On a dial, turn to pick the whole stack or one of its
+  containers.
+- **Container**: up, unhealthy, starting or stopped, and for how long.
+- **Docker Overview**: how many containers run, are down or are unhealthy.
+
+Press a stack or container to stop it when anything in it runs, or start it
+when it's all stopped (a button can be set to just refresh instead). Hold it for
+a second to restart it; leave the slot's gestures unset in deckd so the plugin
+can time the hold. Containers that join another container's network
+(`network_mode: container:…`, e.g. apps behind a VPN gateway) start after it,
+stop before it, and are restarted along with it. When connected through
+Portainer, the Portainer container itself is never stopped.
+
+In any button's settings, set the Docker address: a socket
+(`unix:///var/run/docker.sock`, the default), a Docker API URL such as a socket
+proxy, or your Portainer URL together with a Portainer access token (**My
+account → Access tokens**). Containers you keep stopped on purpose can be listed
+under Ignore so they don't count as down.
+
 ## Trademarks
 
 These plugins are independent and not affiliated with or endorsed by Elgato,
-Corsair, the OBS Project, Discord, qBittorrent, GitHub or Anthropic. Product names are
-used only to say what each plugin works with.
+Corsair, the OBS Project, Discord, qBittorrent, GitHub, Docker, Portainer or
+Anthropic. Product names are used only to say what each plugin works with.
 
 ## Writing your own
 

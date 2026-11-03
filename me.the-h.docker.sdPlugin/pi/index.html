@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input, select { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+  h4 { margin: 14px 0 8px; font-size: 12px; font-weight: 600; color: #9a9a9a; text-transform: uppercase; letter-spacing: 0.05em; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; }
+  code { color: #c8c8c8; }
+</style>
+</head>
+<body>
+  <label>Label <input data-key="label" type="text"></label>
+  <label id="stackRow" hidden>Stack <select data-key="stack"></select></label>
+  <label id="containerRow" hidden>Container <select data-key="container"></select></label>
+  <label id="pressRow" hidden>Press <select data-key="press" data-fixed><option value="toggle">start / stop</option><option value="refresh">refresh</option></select></label>
+  <p class="note" id="status"></p>
+
+  <h4>All buttons</h4>
+  <label>Docker address <input data-global="url" type="text" placeholder="unix:///var/run/docker.sock"></label>
+  <label>Portainer token <input data-global="token" type="password" placeholder="only when the address is Portainer"></label>
+  <label>Environment <input data-global="environment" type="text" placeholder="first one"></label>
+  <label>Ignore <input data-global="ignore" type="text" placeholder="containers you keep stopped"></label>
+  <label>Refresh every (s) <input data-global="interval" type="number" min="3" placeholder="10"></label>
+
+  <p class="note">The address is a Docker socket (<code>unix:///var/run/docker.sock</code>), a Docker API URL
+    (e.g. a socket proxy), or your Portainer URL together with a Portainer access token (My account → Access
+    tokens). The token is stored in plain text in deckd's plugin data, readable only by you.
+    Ignored containers (comma-separated names) don't count as down while stopped.</p>
+  <p class="note">Press a stack or container to stop it when anything in it runs, or start it when it's all
+    stopped (or set Press to refresh). Hold for a second to restart it. On a stack dial, turn to pick the whole
+    stack or one container first. Containers that share another container's network (like a VPN gateway)
+    start after it, stop before it and are restarted with it. The Portainer container the plugin connects
+    through is never stopped. Leave the slot's gestures unset so the plugin can time the hold.</p>
+
+<script>
+let ws, context, settings = {}, globals = {}, names = null, kind = "";
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const fields = [...document.querySelectorAll("[data-key]")];
+const globalFields = [...document.querySelectorAll("[data-global]")];
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  const info = JSON.parse(actionInfoJson);
+  context = uuid;
+  kind = info.action.split(".").pop();
+  settings = info.payload.settings || {};
+  document.getElementById("stackRow").hidden = kind !== "stack";
+  document.getElementById("containerRow").hidden = kind !== "container";
+  document.getElementById("pressRow").hidden = kind === "overview";
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => {
+    send({ event: registerEvent, uuid });
+    send({ event: "getGlobalSettings", context });
+    send({ event: "sendToPlugin", context, payload: { request: "names" } });
+  };
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+    if (msg.event === "didReceiveGlobalSettings") { globals = msg.payload.settings || {}; render(); }
+    if (msg.event === "sendToPropertyInspector") { names = msg.payload; render(); }
+  };
+}
+
+function fill(select, options, value) {
+  const list = [...new Set([...(value ? [value] : []), ...options])];
+  const html = ['<option value="">choose…</option>', ...list.map((o) => `<option>${o.replace(/[&<]/g, (c) => ({ "&": "&amp;", "<": "&lt;" })[c])}</option>`)].join("");
+  if (select.innerHTML !== html) select.innerHTML = html;
+  select.value = value || "";
+}
+
+function render() {
+  for (const el of globalFields) if (document.activeElement !== el) el.value = globals[el.dataset.global] ?? "";
+  for (const el of fields) {
+    if (document.activeElement === el) continue;
+    if (el.hasAttribute("data-fixed")) el.value = settings[el.dataset.key] || "toggle";
+    else if (el.tagName === "SELECT") fill(el, (el.dataset.key === "stack" ? names?.stacks : names?.containers) || [], settings[el.dataset.key]);
+    else el.value = settings[el.dataset.key] ?? "";
+  }
+  document.querySelector('[data-key="label"]').placeholder = settings.stack || settings.container || (kind === "overview" ? "docker" : "");
+  document.getElementById("status").textContent = !names ? "Loading names…" : names.error ? `Can't reach Docker: ${names.error}. Check the settings below.` : "";
+}
+
+for (const el of fields) el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => {
+  settings[el.dataset.key] = el.value.trim();
+  send({ event: "setSettings", context, payload: settings });
+});
+for (const el of globalFields) el.addEventListener("change", () => {
+  globals = { ...globals, [el.dataset.global]: el.value.trim() };
+  send({ event: "setGlobalSettings", context, payload: globals });
+  setTimeout(() => send({ event: "sendToPlugin", context, payload: { request: "names" } }), 1500);
+});
+</script>
+</body>
+</html>

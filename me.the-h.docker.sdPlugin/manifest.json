@@ -1,0 +1,103 @@
+{
+  "UUID": "me.the-h.docker",
+  "Name": "Docker Control",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Health of Docker compose stacks and containers, with hold-to-restart, locally or through Portainer",
+  "Icon": "imgs/plugin",
+  "Category": "Docker Control",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": {
+    "Version": "22"
+  },
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.4"
+  },
+  "OS": [
+    {
+      "Platform": "linux",
+      "MinimumVersion": "5.0"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
+  ],
+  "Actions": [
+    {
+      "UUID": "me.the-h.docker.stack",
+      "Name": "Stack",
+      "Tooltip": "A compose stack: how many of its containers run, and which are down or unhealthy. Press to stop or start it; hold to restart.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Rotate": "Pick the stack or one container",
+          "Push": "Start / stop; hold to restart",
+          "Touch": "Start / stop"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.docker.container",
+      "Name": "Container",
+      "Tooltip": "One container: up, unhealthy, starting or stopped, and for how long. Press to stop or start it; hold to restart.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Push": "Start / stop; hold to restart",
+          "Touch": "Start / stop"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.docker.overview",
+      "Name": "Docker Overview",
+      "Tooltip": "How many containers run, are down or are unhealthy. Press to refresh.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Push": "Refresh",
+          "Touch": "Refresh"
+        }
+      }
+    }
+  ]
+}
