@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+  h4 { margin: 14px 0 8px; font-size: 12px; font-weight: 600; color: #9a9a9a; text-transform: uppercase; letter-spacing: 0.05em; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; }
+</style>
+</head>
+<body>
+  <label>Label <input data-key="label" type="text" placeholder="NEXT"></label>
+  <label>Position <input data-key="position" type="number" min="1" max="20" placeholder="1"></label>
+  <p class="note">1 shows the meeting on now or up next, 2 the one after it, and so on. Put keys set to 1, 2
+    and 3 side by side to see your next three meetings. On a dial this is where turning starts.</p>
+
+  <h4>All buttons</h4>
+  <label>Calendar address <input data-global="url" type="password" placeholder="https://…/basic.ics"></label>
+  <label>Your email <input data-global="email" type="text" placeholder="the calendar's name"></label>
+  <label>Refresh every (min) <input data-global="refresh" type="number" min="5" placeholder="10"></label>
+
+  <p class="note">Use your calendar's private iCal (.ics) address. In Google Calendar it's under
+    Settings → your calendar → <em>Secret address in iCal format</em>. Anyone with that address can read
+    your calendar, so it's stored only in deckd's plugin data on this computer, in plain text.</p>
+  <p class="note">Meetings you declined are hidden. They're matched by your email, which defaults to the
+    calendar's name (for Google, its owner's address). All-day events are not shown.</p>
+  <p class="note">Press the key to join the meeting when it has a link and starts within 15 minutes; otherwise
+    a press refreshes. On a dial, turn to step through the coming meetings, push to join the one shown and
+    tap the strip to refresh.</p>
+
+<script>
+let ws, context, settings = {}, globals = {};
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const fields = [...document.querySelectorAll("[data-key]")];
+const globalFields = [...document.querySelectorAll("[data-global]")];
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  context = uuid;
+  settings = JSON.parse(actionInfoJson).payload.settings || {};
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => { send({ event: registerEvent, uuid }); send({ event: "getGlobalSettings", context }); };
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+    if (msg.event === "didReceiveGlobalSettings") { globals = msg.payload.settings || {}; render(); }
+  };
+}
+
+function render() {
+  for (const el of globalFields) if (document.activeElement !== el) el.value = globals[el.dataset.global] ?? "";
+  for (const el of fields) if (document.activeElement !== el) el.value = settings[el.dataset.key] ?? "";
+}
+
+for (const el of fields) el.addEventListener("input", () => {
+  settings[el.dataset.key] = el.value;
+  send({ event: "setSettings", context, payload: settings });
+});
+// Changing the address or email refetches the calendar, so save when a field is done, not per keystroke.
+for (const el of globalFields) el.addEventListener("change", () => {
+  globals = { ...globals, [el.dataset.global]: el.value.trim() };
+  send({ event: "setGlobalSettings", context, payload: globals });
+});
+</script>
+</body>
+</html>

@@ -15,6 +15,7 @@ need Node.js ≥ 22.
 | [qBittorrent](#qbittorrent) | Transfer speeds and controls for your qBittorrent client |
 | [Claude Usage](#claude-usage) | Claude Code plan limits and token counts |
 | [GitHub Pull Requests](#github-pull-requests) | Open pull requests that need you, per organization |
+| [Meeting Countdown](#meeting-countdown) | Countdown to your next meeting from a calendar feed, with one-press join |
 
 ## Install
 
@@ -187,6 +188,28 @@ It signs in with the [GitHub CLI](https://cli.github.com)'s login
 (`gh auth login`) unless you enter a token in any button's settings. Draft PRs
 are never counted. Everything refreshes every 60 seconds, with
 one request for all buttons.
+
+## Meeting Countdown
+
+Shows the meeting that's on now or up next from any calendar that offers an
+iCal (`.ics`) address, with a live countdown that turns amber 10 minutes and red
+2 minutes before it starts. While a meeting runs it shows the time left, until
+the next one is 5 minutes away.
+
+- **Key**: press to join when the meeting has a video link (Zoom, Google Meet,
+  Teams, Webex, Whereby or Jitsi) and starts within 15 minutes or is on now;
+  otherwise a press refreshes.
+- **Dial**: turn to step through the meetings of the coming week, push to join
+  the one shown, tap the strip to refresh.
+- **Position** (per button): 1 shows the meeting on now or up next, 2 the one
+  after it, and so on, so keys set to 1, 2 and 3 show your next three meetings.
+
+Enter the calendar's private address in any button's settings. In Google
+Calendar it's under **Settings → your calendar → Secret address in iCal
+format**. Anyone with that address can read the calendar, so it is kept only in
+deckd's plugin data on your computer. Meetings you declined and all-day events
+are left out, and a `?` marks invites you haven't answered. The feed refreshes
+every 10 minutes.
 
 ## Trademarks
 

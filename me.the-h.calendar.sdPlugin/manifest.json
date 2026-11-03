@@ -1,0 +1,55 @@
+{
+  "UUID": "me.the-h.calendar",
+  "Name": "Meeting Countdown",
+  "Version": "1.0.0",
+  "Author": "Amir H",
+  "Description": "Countdown to your next meeting from a calendar feed (.ics), with one-press join",
+  "Icon": "imgs/plugin",
+  "Category": "Meeting Countdown",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": {
+    "Version": "22"
+  },
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.4"
+  },
+  "OS": [
+    {
+      "Platform": "linux",
+      "MinimumVersion": "5.0"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
+  ],
+  "Actions": [
+    {
+      "UUID": "me.the-h.calendar.next",
+      "Name": "Next Meeting",
+      "Tooltip": "The meeting on now or up next, with a countdown. Press to join when it starts within 15 minutes; otherwise press refreshes.",
+      "Icon": "imgs/action",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/action",
+        "TriggerDescription": {
+          "Rotate": "Step through meetings",
+          "Push": "Join the meeting shown",
+          "Touch": "Refresh"
+        }
+      }
+    }
+  ]
+}
