@@ -1,7 +1,7 @@
 // Claude Code Sessions: what each running Claude Code session is doing (working, needs you, done),
 // from the state files its hook writes (hooks/session-state.sh). Node >= 22, no deps.
 //
-//   session   one session: its project, state and how long it has been in it. Press to bring it up.
+//   session   one session: its conversation title (else project folder), state and how long it has been in it. Press to bring it up.
 //   overview  how many sessions need you, are working or are done. Press to bring up the one that
 //             has needed you longest (else the one done longest ago).
 //
@@ -78,6 +78,7 @@ function scan() {
     found.push(s);
   }
   sessions = found.sort((a, b) => a.started - b.started || a.session.localeCompare(b.session));
+  readTitles();
   locateTmux();
 }
 
@@ -103,6 +104,75 @@ async function locateTmux() {
     locating = false;
   }
 }
+
+// Conversation titles from each session's transcript (<account>/projects/<folder>/<id>.jsonl): the
+// name given with /rename, else the one Claude Code generates. The transcript only grows, so after
+// the first read only what was appended is read.
+const transcripts = new Map(); // session id -> { file, offset, custom, ai }
+const TITLE = /"type":"(custom-title|ai-title)","(?:customTitle|aiTitle)":"((?:[^"\\]|\\.)*)"/;
+
+function findTranscript(s) {
+  const projects = path.join(accountOf(s).replace(/^~(?=$|\/)/, HOME), "projects");
+  let dirs = [];
+  try { dirs = fs.readdirSync(projects); } catch { return null; }
+  // Its folder is named after the directory the session started in, so try the current one first.
+  const guess = (s.cwd || "").replace(/[^A-Za-z0-9]/g, "-");
+  for (const d of [guess, ...dirs]) {
+    const file = path.join(projects, d, `${s.session}.jsonl`);
+    if (fs.existsSync(file)) return file;
+  }
+  return null;
+}
+
+function readTitle(s) {
+  let t = transcripts.get(s.session);
+  if (!t) {
+    const file = findTranscript(s);
+    if (!file) return; // not written yet; try again on the next scan
+    transcripts.set(s.session, (t = { file, offset: 0, custom: null, ai: null }));
+  }
+  let fd;
+  try {
+    fd = fs.openSync(t.file, "r");
+    const size = fs.fstatSync(fd).size;
+    if (size < t.offset) Object.assign(t, { offset: 0, custom: null, ai: null });
+    const chunk = Buffer.alloc(1 << 20);
+    while (t.offset < size) {
+      const n = fs.readSync(fd, chunk, 0, Math.min(chunk.length, size - t.offset), t.offset);
+      if (!n) break;
+      // Whole lines only, so a line (or a character) cut at the chunk's end is read next time.
+      let end = chunk.lastIndexOf(10, n - 1) + 1;
+      if (!end) {
+        if (n < chunk.length) break; // a line still being written
+        end = n; // a line longer than the chunk: no title in it
+      }
+      for (const line of chunk.toString("utf8", 0, end).split("\n")) {
+        if (!line.includes("-title\"")) continue;
+        const m = TITLE.exec(line);
+        if (!m) continue;
+        let title;
+        try { title = JSON.parse(`"${m[2]}"`).trim(); } catch { continue; }
+        if (m[1] === "custom-title") t.custom = title || null; else t.ai = title || null;
+      }
+      t.offset += end;
+    }
+  } catch {
+    transcripts.delete(s.session); // moved or gone; look for it again
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+  }
+}
+
+function readTitles() {
+  for (const s of sessions) readTitle(s);
+  const live = new Set(sessions.map((s) => s.session));
+  for (const id of transcripts.keys()) if (!live.has(id)) transcripts.delete(id);
+}
+
+const titleOf = (s) => {
+  const t = transcripts.get(s.session);
+  return t?.custom || t?.ai || null;
+};
 
 let watcher = null;
 let rescan = null;
@@ -224,11 +294,27 @@ function ago(sec) {
   return h < 24 ? `${h}h ${m % 60}m` : `${Math.floor(h / 24)}d`;
 }
 
-// Project folder name, plus where it runs when two sessions share a folder.
+// The conversation's title, else its project folder; plus where it runs when two sessions would
+// show the same name.
+const baseName = (s) => titleOf(s) || path.basename(s.cwd || "") || "~";
 function nameOf(s, list) {
-  const base = path.basename(s.cwd || "") || "~";
-  if (list.filter((o) => o.cwd === s.cwd).length < 2) return base;
+  const base = baseName(s);
+  if (list.filter((o) => baseName(o) === base).length < 2) return base;
   return `${base} ${where(s) || "#" + s.session.slice(0, 4)}`;
+}
+
+// Up to `lines` lines of about `width` characters, broken between words; the last one is cut short.
+function wrap(text, width, lines) {
+  const out = [];
+  let rest = text.trim();
+  while (rest && out.length < lines - 1 && rest.length > width) {
+    let cut = rest.lastIndexOf(" ", width);
+    if (cut <= 0) cut = width;
+    out.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if (rest) out.push(trunc(rest, width));
+  return out;
 }
 
 let blink = false; // flips each second while a session needs you
@@ -254,9 +340,13 @@ function sessionKey(inst, now) {
   if (!s) return `${open}<text x="72" y="22" ${FONT} font-size="14" font-weight="600" letter-spacing="1.5" text-anchor="middle" fill="${DIM}">${esc(trunc((inst.settings.label || "CLAUDE").toUpperCase(), 14))}</text><text x="72" y="84" ${FONT} font-size="20" text-anchor="middle" fill="${GREY}">no session</text></svg>`;
   const st = stateOf(s), color = colorOf(s);
   const word = st.word.length > 8 ? 20 : 24;
+  const lines = inst.settings.label ? [trunc(inst.settings.label, 15)] : wrap(nameOf(s, list), 17, 2);
+  const name = lines.length === 1
+    ? `<text x="72" y="32" ${FONT} font-size="16" font-weight="600" text-anchor="middle" fill="${TEXT}">${esc(lines[0])}</text>`
+    : lines.map((l, j) => `<text x="72" y="${25 + j * 18}" ${FONT} font-size="14" font-weight="600" text-anchor="middle" fill="${TEXT}">${esc(l)}</text>`).join("");
   return `${open}
 <rect x="0" y="0" width="144" height="6" fill="${color}"/>
-<text x="72" y="32" ${FONT} font-size="16" font-weight="600" text-anchor="middle" fill="${TEXT}">${esc(trunc(inst.settings.label || nameOf(s, list), 15))}</text>
+${name}
 <text x="72" y="82" ${FONT} font-size="${word}" font-weight="700" text-anchor="middle" fill="${color}">${esc(st.word)}</text>
 <text x="72" y="112" ${FONT} font-size="16" text-anchor="middle" fill="${SOFT}">${esc(ago(now - s.since))}</text>
 <text x="72" y="136" ${FONT} font-size="13" text-anchor="middle" fill="${DIM}">${esc(trunc(where(s), 18))}</text>
@@ -270,20 +360,26 @@ function where(s) {
   return accountOf(s) === DEFAULT_ACCOUNT ? "" : path.basename(accountOf(s));
 }
 
+// A dial slot can fill several touch-strip segments in deckd (payload.span); draw that wide.
+const stripWidth = (inst) => 200 * inst.span;
+const stripOpen = (w) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} 100"><rect width="${w}" height="100" fill="#141414"/>`;
+const noneStrip = (inst, w, text) => `${stripOpen(w)}<text x="6" y="18" ${FONT} font-size="13" font-weight="600" letter-spacing="1.2" fill="${DIM}">${esc(trunc((inst.settings.label || "CLAUDE").toUpperCase(), 16))}</text><text x="${w / 2}" y="64" ${FONT} font-size="20" text-anchor="middle" fill="${GREY}">${text}</text></svg>`;
+
 function sessionStrip(inst, now) {
   const list = listFor(inst);
   const i = shown(inst, list);
   const s = list[i];
-  const open = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><rect width="200" height="100" fill="#141414"/>`;
-  if (!s) return `${open}<text x="6" y="18" ${FONT} font-size="13" font-weight="600" letter-spacing="1.2" fill="${DIM}">${esc(trunc((inst.settings.label || "CLAUDE").toUpperCase(), 16))}</text><text x="100" y="64" ${FONT} font-size="20" text-anchor="middle" fill="${GREY}">no session</text></svg>`;
+  const w = stripWidth(inst);
+  if (!s) return noneStrip(inst, w, "no session");
   const st = stateOf(s), color = colorOf(s);
-  return `${open}
+  const chars = Math.floor((w - 16) / 8.3);
+  return `${stripOpen(w)}
 <rect x="0" y="0" width="4" height="100" fill="${color}"/>
-<text x="10" y="22" ${FONT} font-size="16" font-weight="600" fill="${TEXT}">${esc(trunc(nameOf(s, list), 20))}</text>
+<text x="10" y="22" ${FONT} font-size="15" font-weight="600" fill="${TEXT}">${esc(trunc(nameOf(s, list), chars))}</text>
 <text x="10" y="56" ${FONT} font-size="22" font-weight="700" fill="${color}">${esc(st.word)}</text>
-<text x="194" y="56" ${FONT} font-size="15" text-anchor="end" fill="${SOFT}">${esc(ago(now - s.since))}</text>
-<text x="10" y="90" ${FONT} font-size="13" fill="${DIM}">${esc(trunc(where(s), 22))}</text>
-<text x="194" y="90" ${FONT} font-size="13" text-anchor="end" fill="${DIM}">${i + 1}/${list.length}</text>
+<text x="${w - 6}" y="56" ${FONT} font-size="15" text-anchor="end" fill="${SOFT}">${esc(ago(now - s.since))}</text>
+<text x="10" y="90" ${FONT} font-size="13" fill="${DIM}">${esc(trunc(where(s), chars))}</text>
+<text x="${w - 6}" y="90" ${FONT} font-size="13" text-anchor="end" fill="${DIM}">${i + 1}/${list.length}</text>
 </svg>`;
 }
 
@@ -309,18 +405,19 @@ ${cell(108, 116, c.done, "done", GREEN)}
 // Up to three sessions as rows; turning moves the highlighted one.
 function overviewStrip(inst, now) {
   const list = listFor(inst);
-  const open = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><rect width="200" height="100" fill="#141414"/>`;
-  if (!list.length) return `${open}<text x="6" y="18" ${FONT} font-size="13" font-weight="600" letter-spacing="1.2" fill="${DIM}">${esc(trunc((inst.settings.label || "CLAUDE").toUpperCase(), 16))}</text><text x="100" y="64" ${FONT} font-size="20" text-anchor="middle" fill="${GREY}">no sessions</text></svg>`;
+  const w = stripWidth(inst);
+  if (!list.length) return noneStrip(inst, w, "no sessions");
+  const chars = Math.floor((w - 109) / 7); // what's left beside the state and time
   const i = shown(inst, list);
   const first = Math.max(0, Math.min(i - 1, list.length - 3));
   const rows = list.slice(first, first + 3).map((s, j) => {
     const y = 8 + j * 31, sel = first + j === i;
-    return `${sel ? `<rect x="0" y="${y - 4}" width="200" height="30" fill="#262626"/>` : ""}
+    return `${sel ? `<rect x="0" y="${y - 4}" width="${w}" height="30" fill="#262626"/>` : ""}
 <circle cx="12" cy="${y + 11}" r="5" fill="${colorOf(s)}"/>
-<text x="24" y="${y + 16}" ${FONT} font-size="15" font-weight="${sel ? 700 : 400}" fill="${sel ? TEXT : SOFT}">${esc(trunc(nameOf(s, list), 13))}</text>
-<text x="194" y="${y + 16}" ${FONT} font-size="13" text-anchor="end" fill="${colorOf(s)}">${esc(stateOf(s).short)} ${esc(ago(now - s.since))}</text>`;
+<text x="24" y="${y + 16}" ${FONT} font-size="15" font-weight="${sel ? 700 : 400}" fill="${sel ? TEXT : SOFT}">${esc(trunc(nameOf(s, list), chars))}</text>
+<text x="${w - 6}" y="${y + 16}" ${FONT} font-size="13" text-anchor="end" fill="${colorOf(s)}">${esc(stateOf(s).short)} ${esc(ago(now - s.since))}</text>`;
   });
-  return `${open}${rows.join("\n")}</svg>`;
+  return `${stripOpen(w)}${rows.join("\n")}</svg>`;
 }
 
 // --------------------------------------------------------------------------- instances
@@ -389,6 +486,7 @@ function remember(msg) {
   inst.action = msg.action;
   inst.controller = msg.payload?.controller || inst.controller || "Keypad";
   inst.settings = msg.payload?.settings || {};
+  inst.span = Math.max(1, Math.floor(Number(msg.payload?.span) || 1));
   if (before && before !== JSON.stringify(inst.settings)) inst.cursor = 0;
   instances.set(msg.context, inst);
   return inst;

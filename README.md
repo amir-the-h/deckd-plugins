@@ -221,8 +221,10 @@ is doing: **working**, **needs you** (a permission prompt, a question or a plan
 to approve; it blinks), **done** (your turn), **idle** or **error**, with how
 long it has been that way.
 
-- **Session**: one session's project folder, state and time. Position 1 is the
-  oldest running session, 2 the next, and so on.
+- **Session**: one session's conversation title (the name you gave it with
+  `/rename`, else the one Claude Code generates; the project folder until it
+  has one), state and time. Position 1 is the oldest running session, 2 the
+  next, and so on.
 - **Sessions Overview**: how many need you, are working or are done. On a dial
   it lists the sessions; turn to pick one.
 
