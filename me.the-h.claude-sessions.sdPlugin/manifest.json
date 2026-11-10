@@ -1,7 +1,7 @@
 {
   "UUID": "me.the-h.claude-sessions",
   "Name": "Claude Code Sessions",
-  "Version": "1.0.0",
+  "Version": "1.1.0",
   "Author": "Amir H",
   "Description": "Which Claude Code sessions are working, need you or are done, and one press to bring a session up",
   "Icon": "imgs/plugin",
