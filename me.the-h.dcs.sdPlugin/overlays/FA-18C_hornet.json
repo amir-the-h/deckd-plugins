@@ -1,0 +1,536 @@
+{
+  "name": "F/A-18C",
+  "page": "Hornet",
+  "controls": {
+    "pnt_49": {
+      "label": "Master Arm",
+      "core": true
+    },
+    "pnt_458": {
+      "label": "A/A",
+      "core": true
+    },
+    "pnt_459": {
+      "label": "A/G",
+      "core": true
+    },
+    "pnt_50": {
+      "label": "Emer Jett",
+      "core": true
+    },
+    "pnt_226": {
+      "label": "Gear",
+      "positions": {
+        "0": "UP",
+        "1": "DOWN"
+      },
+      "core": true
+    },
+    "pnt_293": {
+      "label": "Hook",
+      "core": true
+    },
+    "pnt_234": {
+      "label": "Flaps",
+      "core": true
+    },
+    "pnt_233": {
+      "label": "Launch Bar",
+      "core": true
+    },
+    "pnt_238": {
+      "label": "Anti Skid",
+      "core": true
+    },
+    "pnt_240": {
+      "label": "Park Brake",
+      "core": true
+    },
+    "pnt_14": {
+      "label": "Master Caution",
+      "core": true
+    },
+    "pnt_404": {
+      "label": "Battery",
+      "core": true
+    },
+    "pnt_375": {
+      "label": "APU",
+      "core": true
+    },
+    "pnt_377": {
+      "label": "Crank",
+      "core": true,
+      "positions": {
+        "-1": "LEFT",
+        "0": "OFF",
+        "1": "RIGHT"
+      }
+    },
+    "pnt_402": {
+      "label": "L Gen",
+      "core": true
+    },
+    "pnt_403": {
+      "label": "R Gen",
+      "core": true
+    },
+    "pnt_453": {
+      "label": "Canopy",
+      "core": true
+    },
+    "pnt_349": {
+      "label": "FCS Reset",
+      "core": true
+    },
+    "pnt_470": {
+      "label": "FCS BIT",
+      "core": true
+    },
+    "pnt_443": {
+      "label": "INS",
+      "core": true
+    },
+    "pnt_440": {
+      "label": "Radar",
+      "positions": {
+        "0": "OFF",
+        "0.1": "STBY",
+        "0.2": "OPR",
+        "0.3": "EMERG"
+      },
+      "core": true
+    },
+    "pnt_365": {
+      "label": "OBOGS",
+      "core": true
+    },
+    "pnt_341": {
+      "label": "Probe",
+      "core": true
+    },
+    "pnt_236": {
+      "label": "Sel Jett",
+      "positions": {
+        "-0.1": "L FUS",
+        "0": "SAFE",
+        "0.1": "R FUS",
+        "0.2": "RACK",
+        "0.3": "STORES"
+      },
+      "core": true
+    },
+    "pnt_517": {
+      "label": "Dispenser",
+      "core": true
+    },
+    "pnt_380": {
+      "label": "Dispense"
+    },
+    "pnt_51": {
+      "label": "L DDI",
+      "core": true
+    },
+    "pnt_76": {
+      "label": "R DDI",
+      "core": true
+    },
+    "pnt_52": {
+      "label": "L DDI Bright",
+      "core": true
+    },
+    "pnt_77": {
+      "label": "R DDI Bright",
+      "core": true
+    },
+    "pnt_203": {
+      "label": "AMPCD Bright",
+      "core": true
+    },
+    "pnt_141": {
+      "label": "HUD Bright",
+      "core": true
+    },
+    "pnt_142": {
+      "label": "HUD Day/Night",
+      "core": true
+    },
+    "pnt_174": {
+      "label": "IFEI Bright",
+      "core": true
+    },
+    "pnt_109": {
+      "label": "UFC Bright",
+      "core": true
+    },
+    "pnt_124": {
+      "label": "COMM 1",
+      "core": true
+    },
+    "pnt_126": {
+      "label": "COMM 2",
+      "core": true
+    },
+    "pnt_108": {
+      "label": "COMM 1 Vol",
+      "core": true
+    },
+    "pnt_123": {
+      "label": "COMM 2 Vol",
+      "core": true
+    },
+    "pnt_224": {
+      "label": "Baro",
+      "core": true,
+      "display": {
+        "type": "drums",
+        "drums": [
+          {
+            "arg": 223,
+            "min": 26,
+            "max": 31
+          },
+          {
+            "arg": 222,
+            "min": 0,
+            "max": 10
+          },
+          {
+            "arg": 221,
+            "min": 0,
+            "max": 10
+          }
+        ],
+        "decimals": 2,
+        "suffix": " in"
+      }
+    },
+    "pnt_417": {
+      "label": "Warn Dimmer",
+      "core": true
+    },
+    "pnt_413": {
+      "label": "Consoles",
+      "core": true
+    },
+    "pnt_414": {
+      "label": "Inst Panel",
+      "core": true
+    },
+    "pnt_415": {
+      "label": "Flood",
+      "core": true
+    },
+    "pnt_338": {
+      "label": "Position Lts",
+      "core": true
+    },
+    "pnt_337": {
+      "label": "Formation Lts",
+      "core": true
+    },
+    "pnt_339": {
+      "label": "Strobe",
+      "core": true
+    },
+    "pnt_237": {
+      "label": "Ldg/Taxi Lt",
+      "core": true
+    },
+    "pnt_494": {
+      "label": "Ext Lights"
+    },
+    "pnt_312": {
+      "label": "HDG Set",
+      "core": true
+    },
+    "pnt_313": {
+      "label": "CRS Set",
+      "core": true
+    },
+    "pnt_352": {
+      "label": "ILS Channel",
+      "positions": {
+        "0": "1",
+        "0.05": "2",
+        "0.1": "3",
+        "0.15": "4",
+        "0.2": "5",
+        "0.25": "6",
+        "0.3": "7",
+        "0.35": "8",
+        "0.4": "9",
+        "0.45": "10",
+        "0.5": "11",
+        "0.55": "12",
+        "0.6": "13",
+        "0.65": "14",
+        "0.7": "15",
+        "0.75": "16",
+        "0.8": "17",
+        "0.85": "18",
+        "0.9": "19",
+        "0.95": "20"
+      },
+      "core": true
+    },
+    "pnt_363": {
+      "label": "TACAN Vol",
+      "core": true
+    },
+    "pnt_107": {
+      "label": "ADF",
+      "core": true
+    },
+    "pnt_373": {
+      "label": "COMM 1 Ant",
+      "core": true
+    },
+    "pnt_147": {
+      "label": "ALT",
+      "core": true
+    },
+    "pnt_148": {
+      "label": "Attitude",
+      "core": true
+    },
+    "pnt_99": {
+      "label": "I/P",
+      "core": true
+    },
+    "pnt_47_121": {
+      "label": "CLR",
+      "core": true
+    },
+    "pnt_47_122": {
+      "label": "ENT",
+      "core": true
+    },
+    "pnt_100": {
+      "label": "OPT 1",
+      "core": true
+    },
+    "pnt_101": {
+      "label": "OPT 2",
+      "core": true
+    },
+    "pnt_102": {
+      "label": "OPT 3",
+      "core": true
+    },
+    "pnt_103": {
+      "label": "OPT 4",
+      "core": true
+    },
+    "pnt_106": {
+      "label": "OPT 5",
+      "core": true
+    },
+    "pnt_128": {
+      "label": "A/P",
+      "core": true
+    },
+    "pnt_129": {
+      "label": "IFF",
+      "core": true
+    },
+    "pnt_130": {
+      "label": "TCN",
+      "core": true
+    },
+    "pnt_131": {
+      "label": "ILS",
+      "core": true
+    },
+    "pnt_132": {
+      "label": "D/L",
+      "core": true
+    },
+    "pnt_133": {
+      "label": "BCN",
+      "core": true
+    },
+    "pnt_134": {
+      "label": "ON/OFF",
+      "core": true
+    }
+  },
+  "lights": {
+    "13": {
+      "label": "MASTER CAUTION",
+      "color": "amber"
+    },
+    "10": {
+      "label": "L FIRE",
+      "color": "red"
+    },
+    "26": {
+      "label": "R FIRE",
+      "color": "red"
+    },
+    "29": {
+      "label": "APU FIRE",
+      "color": "red"
+    },
+    "15": {
+      "label": "GO",
+      "color": "green"
+    },
+    "16": {
+      "label": "NO GO",
+      "color": "amber"
+    },
+    "17": {
+      "label": "L BLEED",
+      "color": "red"
+    },
+    "18": {
+      "label": "R BLEED",
+      "color": "red"
+    },
+    "19": {
+      "label": "SPD BRK",
+      "color": "green"
+    },
+    "47": {
+      "label": "A/A",
+      "color": "green"
+    },
+    "48": {
+      "label": "A/G",
+      "color": "green"
+    },
+    "162": {
+      "label": "FLAPS",
+      "color": "amber"
+    },
+    "163": {
+      "label": "HALF FLAPS",
+      "color": "green"
+    },
+    "164": {
+      "label": "FULL FLAPS",
+      "color": "green"
+    },
+    "165": {
+      "label": "LEFT GEAR",
+      "color": "green"
+    },
+    "166": {
+      "label": "NOSE GEAR",
+      "color": "green"
+    },
+    "167": {
+      "label": "RIGHT GEAR",
+      "color": "green"
+    },
+    "227": {
+      "label": "GEAR HANDLE",
+      "color": "red"
+    },
+    "294": {
+      "label": "HOOK",
+      "color": "amber"
+    },
+    "376": {
+      "label": "APU READY",
+      "color": "green"
+    },
+    "304": {
+      "label": "FUEL LO",
+      "color": "amber"
+    },
+    "307": {
+      "label": "L GEN",
+      "color": "amber"
+    },
+    "308": {
+      "label": "R GEN",
+      "color": "amber"
+    },
+    "300": {
+      "label": "BATT SW",
+      "color": "amber"
+    },
+    "301": {
+      "label": "FCS HOT",
+      "color": "amber"
+    },
+    "302": {
+      "label": "GEN TIE",
+      "color": "amber"
+    },
+    "305": {
+      "label": "FCES",
+      "color": "amber"
+    },
+    "298": {
+      "label": "CK SEAT",
+      "color": "amber"
+    },
+    "299": {
+      "label": "APU ACC",
+      "color": "amber"
+    }
+  },
+  "groundBelowSpeed": 35,
+  "phases": [
+    {
+      "name": "parked",
+      "page": "Hornet Start",
+      "when": {
+        "all": [
+          {
+            "ground": true
+          },
+          {
+            "gs": {
+              "below": 1.5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "taxi",
+      "page": "Hornet Systems",
+      "when": {
+        "ground": true
+      }
+    },
+    {
+      "name": "air",
+      "page": "Hornet",
+      "when": {
+        "ground": false
+      }
+    }
+  ],
+  "alerts": {
+    "page": "Hornet Lights",
+    "triggers": [
+      {
+        "args": [
+          13
+        ],
+        "skipPhases": [
+          "parked"
+        ]
+      },
+      {
+        "args": [
+          10,
+          26,
+          29
+        ]
+      }
+    ]
+  },
+  "indicators": {
+    "ufc": "UFC_mask",
+    "ifei": "txt_RPM_R",
+    "lddi": 2,
+    "rddi": 3,
+    "ampcd": 4
+  }
+}

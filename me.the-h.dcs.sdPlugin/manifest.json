@@ -1,0 +1,180 @@
+{
+  "UUID": "me.the-h.dcs",
+  "Name": "DCS World Cockpit",
+  "Version": "0.1.0",
+  "Author": "Amir H",
+  "Description": "Keys and dials that work like the real switches, lights and knobs of the DCS World aircraft you're flying, with live state and automatic per-aircraft pages",
+  "Icon": "imgs/plugin",
+  "Category": "DCS World",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": {
+    "Version": "22"
+  },
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.4"
+  },
+  "OS": [
+    {
+      "Platform": "linux",
+      "MinimumVersion": "5.0"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Actions": [
+    {
+      "UUID": "me.the-h.dcs.switch",
+      "Name": "Cockpit Switch",
+      "Tooltip": "Any clickable cockpit control: flips switches, steps multi-position switches and holds buttons, showing the live position.",
+      "Icon": "imgs/switch",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/switch",
+        "TriggerDescription": {
+          "Rotate": "Move the switch",
+          "Push": "Press",
+          "Touch": "Press"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.dcs.knob",
+      "Name": "Cockpit Knob",
+      "Tooltip": "A cockpit knob on a dial: turn to adjust volume, brightness, channels or the altimeter setting; push for the knob's button. The touch strip shows the value.",
+      "Icon": "imgs/knob",
+      "Controllers": [
+        "Encoder",
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/knob",
+        "TriggerDescription": {
+          "Rotate": "Turn the knob",
+          "Push": "Push / pull",
+          "Touch": "Push / pull"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.dcs.light",
+      "Name": "Cockpit Light",
+      "Tooltip": "A cockpit warning, caution or indicator light, lit when it is lit in the cockpit. Can also press a control, e.g. a reset button.",
+      "Icon": "imgs/light",
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "me.the-h.dcs.command",
+      "Name": "Key Command",
+      "Tooltip": "Sends one of DCS's own input commands, the kind you'd bind to a keyboard key (e.g. throttle to IDLE or OFF).",
+      "Icon": "imgs/switch",
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "me.the-h.dcs.picker",
+      "Name": "Button Picker",
+      "Tooltip": "A dial for a row of cockpit buttons, such as one side of a display or the UFC keypad: turn to pick a button, push to press it. The touch strip shows them all.",
+      "Icon": "imgs/knob",
+      "Controllers": [
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/knob",
+        "TriggerDescription": {
+          "Rotate": "Pick a button",
+          "Push": "Press it",
+          "Touch": "Press the one you tap"
+        }
+      }
+    },
+    {
+      "UUID": "me.the-h.dcs.readout",
+      "Name": "Read-out",
+      "Tooltip": "Values from a cockpit display, such as engine RPM, temperatures or fuel, on a key or the touch strip.",
+      "Icon": "imgs/plugin",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/plugin"
+      }
+    },
+    {
+      "UUID": "me.the-h.dcs.status",
+      "Name": "DCS Status",
+      "Tooltip": "Link to DCS and the aircraft you're in; press to open its page. Its settings install the hook into DCS and scan your aircraft.",
+      "Icon": "imgs/plugin",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "States": [
+        {
+          "Image": "imgs/key",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "Icon": "imgs/plugin",
+        "TriggerDescription": {
+          "Push": "Open the aircraft's page",
+          "Touch": "Open the aircraft's page"
+        }
+      }
+    }
+  ]
+}

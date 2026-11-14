@@ -1,0 +1,312 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 12px; background: #2d2d2d; color: #d8d8d8; font: 13px system-ui, sans-serif; }
+  label { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input, textarea, select, button { background: #3d3d3d; border: 1px solid #555; color: inherit; border-radius: 4px; padding: 4px 6px; font: inherit; }
+  button { cursor: pointer; padding: 4px 10px; }
+  button:hover { background: #4a4a4a; }
+  select[size] { width: 100%; padding: 2px; }
+  textarea { font-family: ui-monospace, monospace; font-size: 12px; min-height: 48px; resize: vertical; }
+  h4 { margin: 14px 0 8px; font-size: 12px; font-weight: 600; color: #9a9a9a; text-transform: uppercase; letter-spacing: 0.05em; }
+  .note { color: #8a8a8a; font-size: 12px; line-height: 1.4; margin: 6px 0; }
+  .bad { color: #e05a5a; } .good { color: #4cd07d; } .warn { color: #f0a830; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .picker { margin-bottom: 8px; }
+  .picker input { width: 100%; box-sizing: border-box; margin-bottom: 4px; }
+  .hint { color: #9a9a9a; font-size: 12px; min-height: 16px; margin-bottom: 8px; }
+  details summary { cursor: pointer; color: #9a9a9a; margin: 10px 0 6px; }
+  code { color: #c8c8c8; }
+  .kv { display: grid; grid-template-columns: 110px 1fr; gap: 4px 8px; font-size: 12px; margin-bottom: 8px; word-break: break-all; }
+  .kv span:nth-child(odd) { color: #8a8a8a; }
+</style>
+</head>
+<body>
+  <!-- switch / knob / light: which aircraft -->
+  <label data-for="switch knob light picker">Aircraft <select id="aircraft"></select></label>
+
+  <!-- switch / knob: which control -->
+  <div class="picker" data-for="switch knob light">
+    <h4 id="controlTitle">Control</h4>
+    <input id="controlFilter" type="search" placeholder="search, e.g. master arm, gear, comm">
+    <select id="control" size="9"></select>
+    <label style="margin-top:6px"><span></span><span><input id="showAll" type="checkbox"> show every control (not just the main ones)</span></label>
+    <div class="hint" id="controlHint"></div>
+  </div>
+
+  <label data-for="switch knob light" id="modeRow">Press <select data-key="mode" id="mode"></select></label>
+  <label id="positionRow">Position <select data-key="position" id="position"></select></label>
+  <label data-for="switch knob" id="stepRow">Step per click <input data-key="step" type="number" step="0.01" min="0" placeholder="automatic"></label>
+
+  <!-- light: which lamp -->
+  <div class="picker" data-for="light">
+    <h4>Light</h4>
+    <input id="lightFilter" type="search" placeholder="search, e.g. caution, fire, gear">
+    <select id="light" size="8"></select>
+  </div>
+  <label data-for="light">Lit above <input data-key="threshold" type="number" step="0.05" min="0" max="1" placeholder="0.1"></label>
+
+  <label data-for="switch knob light">Label <input data-key="label" type="text" placeholder="the control's name"></label>
+  <label data-for="switch knob light">Colour <select data-key="color">
+    <option value="">automatic</option><option value="green">green</option><option value="amber">amber</option>
+    <option value="red">red</option><option value="blue">blue</option><option value="white">white</option></select></label>
+  <label data-for="switch knob">Lamp <select data-key="lamp" id="lamp"></select></label>
+
+  <div data-for="readout">
+    <label>Label <input data-key="label" type="text" placeholder="e.g. RPM"></label>
+    <label>Display <input data-key="textIndicator" type="text" placeholder="e.g. ifei"></label>
+    <label>Shows <input data-key="template" type="text" placeholder="{txt_RPM_L}  {txt_RPM_R}"></label>
+    <label>Small text <input data-key="sub" type="text" placeholder="e.g. L  R"></label>
+    <p class="note">Each <code>{name}</code> is replaced by that element's text on the display; the element names
+      are in the list "Write display list" makes (a DCS Status button's settings).</p>
+  </div>
+
+  <div data-for="picker">
+    <label>Label <input data-key="label" type="text" placeholder="e.g. Left DDI, left side"></label>
+    <label>Labels from <input data-key="pbDisplay" type="text" placeholder="none, e.g. lddi"></label>
+    <label>Buttons <textarea data-key="items" placeholder="pnt_54=PB 1&#10;pnt_55=PB 2"></textarea></label>
+    <p class="note">One button per line (or comma-separated): its control id, then <code>=</code> and the name to
+      show. Control ids are in the hint under the control list of a Cockpit Switch's settings.</p>
+  </div>
+
+  <details data-for="switch knob picker">
+    <summary>Show text from a cockpit display</summary>
+    <label>Display <input data-key="textIndicator" type="text" placeholder="none, e.g. ufc or 7"></label>
+    <label>Element <input data-key="textElement" type="text" placeholder="first element"></label>
+    <label data-for="switch knob">Lit while <input data-key="textCue" type="text" placeholder="e.g. UFC_OptionCueing1"></label>
+    <p class="note">Shows text from a cockpit display (for example a radio channel on the UFC) instead of the
+      control's position. A display is a name from the aircraft's overlay (<code>ufc</code>) or a number. "Lit
+      while" lights the key while that element shows anything, like an option window's selection colon. Use "Write display list" in a DCS Status button's settings while flying to see the
+      ids and element names your aircraft has.</p>
+  </details>
+
+  <!-- command: one of DCS's input commands -->
+  <div data-for="command">
+    <label>Preset <select id="preset">
+      <option value="">(choose to fill in)</option>
+      <option value="311|Throttle L IDLE">Throttle (Left) - IDLE</option>
+      <option value="313|Throttle L OFF">Throttle (Left) - OFF</option>
+      <option value="312|Throttle R IDLE">Throttle (Right) - IDLE</option>
+      <option value="314|Throttle R OFF">Throttle (Right) - OFF</option>
+      <option value="309|Auto Start">Auto start (cheat)</option>
+      <option value="310|Auto Stop">Auto stop (cheat)</option>
+    </select></label>
+    <label>Command <input data-key="command" type="number" placeholder="e.g. 311"></label>
+    <label>Value <input data-key="value" type="number" step="0.1" placeholder="none"></label>
+    <label>On release <input data-key="release" type="number" placeholder="nothing"></label>
+    <label>Label <input data-key="label" type="text" placeholder="Command 311"></label>
+    <label>Small text <input data-key="sub" type="text" placeholder="e.g. tap IDLE · hold OFF"></label>
+    <p class="note">Numbers are DCS's own input commands (the ones listed in <code>Scripts/Export.lua</code>
+      in the game folder). Put two of these in one slot with the tap and hold gestures to get, say, IDLE on a tap
+      and OFF on a hold.</p>
+  </div>
+
+  <!-- status: setup -->
+  <div data-for="status">
+    <h4>DCS</h4>
+    <div class="kv" id="paths"></div>
+    <div class="row">
+      <button id="install">Install / repair hook</button>
+      <button id="uninstall">Remove hook</button>
+      <button id="rescan">Rescan aircraft</button>
+      <button id="dump">Write display list</button>
+    </div>
+    <p class="note" id="message"></p>
+    <p class="note">The hook is a small script in <code>Saved Games/DCS/Scripts/deckd/</code>, loaded by one line
+      added to <code>Scripts/Export.lua</code>; any other export scripts there keep working. Removing it takes out
+      only that line and folder. Restart the mission after installing.</p>
+
+    <h4>All buttons</h4>
+    <label>DCS folder <input data-global="dcsRoot" type="text" placeholder="found through Steam"></label>
+    <label>Saved Games <input data-global="savedGames" type="text" placeholder="found through Steam"></label>
+    <label>Receive port <input data-global="listenPort" type="number" placeholder="7790"></label>
+    <label>Send port <input data-global="sendPort" type="number" placeholder="7791"></label>
+    <label>Follow aircraft <select data-global="follow"><option value="">switch pages automatically</option><option value="off">don't switch pages</option></select></label>
+    <label>Landing page <input data-global="home" type="text" placeholder="DCS"></label>
+    <label>Aircraft pages <textarea data-global="pages" placeholder="FA-18C_hornet=Hornet"></textarea></label>
+    <p class="note">When you get into an aircraft the deck switches to its page (named after the aircraft unless
+      set above, one <code>unit=page</code> per line) and back to the landing page when you get out. Changing the
+      ports needs "Install / repair hook" again.</p>
+    <h4>From DCS</h4>
+    <div class="note" id="dcslog">nothing yet</div>
+  </div>
+
+<script>
+let ws, context, settings = {}, globals = {}, kind = "", status = null, catalog = null;
+const $ = (id) => document.getElementById(id);
+const send = (msg) => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+const fields = [...document.querySelectorAll("[data-key]")];
+const globalFields = [...document.querySelectorAll("[data-global]")];
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const ask = (request, extra = {}) => send({ event: "sendToPlugin", context, payload: { request, ...extra } });
+
+function connectElgatoStreamDeckSocket(port, uuid, registerEvent, infoJson, actionInfoJson) {
+  const info = JSON.parse(actionInfoJson);
+  context = uuid;
+  kind = info.action.split(".").pop();
+  settings = info.payload.settings || {};
+  for (const el of document.querySelectorAll("[data-for]")) el.hidden = !el.dataset.for.split(" ").includes(kind);
+  $("controlTitle").textContent = kind === "light" ? "Press (optional)" : "Control";
+  render();
+  ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  ws.onopen = () => {
+    send({ event: registerEvent, uuid });
+    send({ event: "getGlobalSettings", context });
+    ask(kind === "status" ? "status" : "catalog", { unit: settings.aircraft });
+  };
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.event === "didReceiveSettings") { settings = msg.payload.settings || {}; render(); }
+    if (msg.event === "didReceiveGlobalSettings") { globals = msg.payload.settings || {}; render(); }
+    if (msg.event === "sendToPropertyInspector") fromPlugin(msg.payload);
+  };
+}
+
+function save() { send({ event: "setSettings", context, payload: settings }); }
+
+function fromPlugin(p) {
+  if (p.status) { status = p.status; showStatus(); }
+  if (p.catalog !== undefined) { catalog = p.catalog; showCatalog(); }
+  if (p.message) { $("message").textContent = p.message; $("message").className = p.error ? "note bad" : "note good"; }
+}
+
+// ------------------------------------------------------------------ status
+
+function showStatus() {
+  const s = status;
+  const hookText = { installed: ["installed", "good"], outdated: ["needs repair", "warn"], unlinked: ["not in Export.lua", "bad"], missing: ["not installed", "bad"] }[s.hook] || [s.hook, ""];
+  $("paths").innerHTML = [
+    ["DCS folder", s.root || "not found"], ["Saved Games", s.savedGames || "not found"],
+    ["Hook", `<span class="${hookText[1]}">${hookText[0]}</span>`, true],
+    ["Link", s.connected ? `<span class="good">connected</span>${s.unit ? " · " + esc(s.unit) : " · not in a cockpit"}` : "waiting for DCS", true],
+    ["Scanned", s.units.length ? s.units.join(", ") : "none yet"],
+    ["Lua", s.lua || "none (aircraft are scanned inside DCS)"],
+  ].map(([k, v, html]) => `<span>${k}</span><span>${html ? v : esc(v)}</span>`).join("");
+  $("dcslog").textContent = s.log.length ? s.log.join("\n") : "nothing yet";
+  $("dcslog").style.whiteSpace = "pre-wrap";
+  // the aircraft list for control pickers
+  const sel = $("aircraft");
+  const units = [...new Set([...(s.units || []), settings.aircraft].filter(Boolean))];
+  sel.innerHTML = `<option value="">the one you're flying</option>` + units.map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
+  sel.value = settings.aircraft || "";
+}
+
+// ------------------------------------------------------------------ controls
+
+const sideText = (c, s) => {
+  const name = c.names && c.names[String(Math.round(s.value * 10000) / 10000)];
+  if (s.type === "momentary") return `Hold ${name || (s.value > 0 ? "+" : "") + s.value}`;
+  if (s.type === "step") return s.value > 0 ? "Step up" : "Step down";
+  return s.relative ? "Turn (relative)" : "Turn";
+};
+
+function currentControl() { return catalog?.controls.find((c) => c.id === settings.control) || null; }
+
+function showCatalog() {
+  if (status) showStatus();
+  const list = $("control");
+  const filter = $("controlFilter").value.trim().toLowerCase();
+  const all = $("showAll").checked || !catalog?.controls.some((c) => c.core);
+  if (!catalog) {
+    list.innerHTML = `<option disabled>No aircraft scanned yet. Use a DCS Status button's settings.</option>`;
+  } else {
+    const wanted = kind === "knob" ? (c) => c.kind === "axis" || c.positions || c.sides.some((s) => s.type === "axis") : () => true;
+    const groups = new Map();
+    for (const c of catalog.controls) {
+      if (!wanted(c)) continue;
+      if (!all && !c.core && c.id !== settings.control) continue;
+      if (filter && !`${c.label} ${c.hint} ${c.group}`.toLowerCase().includes(filter)) continue;
+      if (!groups.has(c.group)) groups.set(c.group, []);
+      groups.get(c.group).push(c);
+    }
+    list.innerHTML = (kind === "light" ? `<option value="">(nothing)</option>` : "") + [...groups].map(([g, cs]) =>
+      `<optgroup label="${esc(g)}">${cs.map((c) => `<option value="${esc(c.id)}" title="${esc(c.hint)}">${esc(c.label)}${c.label !== c.hint ? " — " + esc(c.hint) : ""}</option>`).join("")}</optgroup>`).join("");
+    list.value = settings.control || "";
+  }
+  showControl();
+  showLights();
+}
+
+function showControl() {
+  const c = currentControl();
+  $("controlHint").textContent = c ? `${c.hint} (${c.kind}, ${c.id})` : "";
+  const mode = $("mode");
+  const opts = [["", kind === "knob" ? "push: the knob's button" : "automatic"]];
+  if (c) {
+    if (c.positions) opts.push(["next", "next position"], ["prev", "previous position"], ["set", "go to a position"]);
+    if (c.sides.length > 1 || c.kind === "spring") for (const s of c.sides) opts.push([`side:${s.index}`, sideText(c, s)]);
+    for (const s of c.sides) if (s.type === "momentary") opts.push([`latch:${s.index}`, `${sideText(c, s).replace(/^Hold/, "Click")} and leave it`]);
+  }
+  mode.innerHTML = opts.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join("");
+  mode.value = settings.mode || "";
+  $("modeRow").hidden = kind === "status" || (kind === "light" && !c);
+  const pos = $("position");
+  pos.innerHTML = (c?.positions || []).map((v) => `<option value="${v}">${esc((c.names && c.names[String(v)]) || v)}</option>`).join("");
+  pos.value = settings.position ?? "";
+  $("positionRow").hidden = settings.mode !== "set" || !c?.positions;
+  $("stepRow").hidden = !(kind === "switch" || kind === "knob") || !c || !(c.kind === "axis" || c.sides.some((s) => s.type === "axis"));
+}
+
+function showLights() {
+  const lights = catalog?.lights || [];
+  const filter = $("lightFilter").value.trim().toLowerCase();
+  const shown = lights.filter((l) => !filter || `${l.label} ${l.name}`.toLowerCase().includes(filter));
+  $("light").innerHTML = shown.map((l) => `<option value="${l.arg}">${esc(l.label)}${l.lamp ? "" : " (gauge)"} — ${l.arg}</option>`).join("");
+  $("light").value = settings.arg ?? "";
+  $("lamp").innerHTML = `<option value="">none</option>` + lights.filter((l) => l.lamp).map((l) => `<option value="${l.arg}">${esc(l.label)}</option>`).join("");
+  $("lamp").value = settings.lamp ?? "";
+}
+
+function render() {
+  for (const el of globalFields) {
+    if (document.activeElement === el) continue;
+    const v = globals[el.dataset.global];
+    el.value = el.dataset.global === "follow" ? (v === false ? "off" : "") : v ?? "";
+  }
+  for (const el of fields) if (document.activeElement !== el) el.value = settings[el.dataset.key] ?? "";
+  if (catalog) showControl();
+}
+
+// ------------------------------------------------------------------ inputs
+
+for (const el of fields) el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => {
+  settings[el.dataset.key] = el.value.trim();
+  save();
+  if (el.dataset.key === "mode") showControl();
+});
+for (const el of globalFields) el.addEventListener("change", () => {
+  let v = el.value.trim();
+  if (el.dataset.global === "follow") v = v === "off" ? false : true;
+  globals = { ...globals, [el.dataset.global]: v };
+  send({ event: "setGlobalSettings", context, payload: globals });
+  setTimeout(() => ask("status"), 500);
+});
+$("aircraft").addEventListener("change", () => {
+  settings.aircraft = $("aircraft").value;
+  save();
+  ask("catalog", { unit: settings.aircraft });
+});
+$("control").addEventListener("change", () => {
+  settings.control = $("control").value;
+  delete settings.mode; delete settings.position;
+  save();
+  showControl();
+});
+$("light").addEventListener("change", () => { settings.arg = $("light").value; save(); });
+$("controlFilter").addEventListener("input", showCatalog);
+$("showAll").addEventListener("change", showCatalog);
+$("lightFilter").addEventListener("input", showLights);
+$("preset").addEventListener("change", () => {
+  const [command, label] = $("preset").value.split("|");
+  if (!command) return;
+  settings.command = command;
+  if (!settings.label) settings.label = label;
+  save();
+  render();
+});
+for (const id of ["install", "uninstall", "rescan", "dump"]) $(id).addEventListener("click", () => { $("message").textContent = "…"; ask(id); });
+</script>
+</body>
+</html>

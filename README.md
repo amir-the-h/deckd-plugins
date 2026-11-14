@@ -19,6 +19,7 @@ need Node.js ≥ 22.
 | [Claude Code Sessions](#claude-code-sessions) | Which Claude Code sessions are working, need you or are done |
 | [Docker Control](#docker-control) | Health of compose stacks and containers, with start, stop and restart |
 | [Home Assistant](#home-assistant) | Live entity states, one-press control, dial adjustments and service calls |
+| [DCS World Cockpit](#dcs-world-cockpit) | Cockpit switches, lights and knobs of the DCS World aircraft you're flying, live |
 
 ## Install
 
@@ -296,12 +297,85 @@ Enter Home Assistant's address and a long-lived access token (your profile →
 **Security → Long-lived access tokens**) in any button's settings; the panel
 then offers your entities and services to pick from.
 
+## DCS World Cockpit
+
+Keys and dials that work like the real controls of the DCS World aircraft
+you're in: switches flip, buttons are held while the key is, knobs turn, and
+everything shows its live position. Works with every aircraft that has a
+clickable cockpit; Flaming Cliffs aircraft (Su-25T, F-15C…) have none.
+
+- **Cockpit Switch**: any clickable control. A press does what clicking it
+  does: flips a toggle, steps a multi-position switch round, or holds a button
+  or spring-loaded switch while the key is held. It can also be set to step
+  one way, go to one position, or use one side of a switch (e.g. engine crank
+  LEFT or RIGHT). Shows the position, with an optional lamp in the corner.
+- **Cockpit Knob**: a knob on a dial. Turn to adjust volume, brightness, a
+  multi-position knob or a relative knob (radio channels, altimeter setting);
+  push for the knob's own button. The touch strip shows the value and can
+  span several segments.
+- **Cockpit Light**: a warning, caution or indicator light, lit when it's lit
+  in the cockpit, in its own colour. It can also press a control, e.g. a
+  master caution light that resets when pressed.
+- **DCS Status**: whether DCS is connected and which aircraft you're in; press
+  to open that aircraft's page. Its settings hold the setup.
+- **Key Command**: one of DCS's own input commands, the kind you'd bind to a
+  keyboard key (throttle to IDLE or OFF, say). Put two in one slot with the tap
+  and hold gestures for two commands on one key.
+- **Button Picker**: a dial for a row of buttons, such as one side of a
+  display's frame or the UFC keypad: turn to pick one, push to press it, or tap
+  it on the touch strip. It can show a display's text too, like the UFC
+  scratchpad, and for a display's frame buttons it labels each with the legend
+  the display shows next to it right now (RDR, SURF, MENU…), placed using the
+  aircraft's own display page scripts.
+- **Read-out**: values from a cockpit display on a key or the touch strip,
+  such as engine RPM, temperatures or fuel from the F/A-18C's IFEI.
+
+**Setup.** Put a DCS Status button on a page and open its settings. The plugin
+finds DCS through Steam's library list (or the paths you give it), including
+the Proton prefix on Linux. Click **Install / repair hook**: this copies a small
+script to `Saved Games/DCS/Scripts/deckd/` and adds one line to
+`Scripts/Export.lua` that loads it. Your other export scripts keep working, an
+existing `Export.lua` is backed up first, and **Remove hook** takes out only
+that line and folder. Restart the mission afterwards.
+
+**Controls come from your own install.** The plugin reads each aircraft's
+cockpit scripts (`Mods/aircraft/<name>/Cockpit/Scripts/`) and lists every
+clickable control and lamp, grouped by system and searchable. This needs a Lua
+interpreter (`luajit` or `lua5.1`); without one the hook does the same scan
+inside DCS the first time you fly an aircraft. Nothing from the game is
+included in this plugin. Files in `overlays/` only add short labels, position
+names and lamp colours for a few aircraft.
+
+**Pages.** When you get into an aircraft the deck switches to the page named
+after it (`FA-18C_hornet` or, with the overlay, `Hornet`; you can map others in
+the settings), and back to a landing page (`DCS`) when you get out. Give that
+landing page a Steam auto-switch rule for DCS (app 223750) so the deck goes
+there when the game is focused.
+
+**Following the flight.** An aircraft's overlay can name a page for each
+phase (parked, taxiing, airborne) and a page to jump to while a warning or
+caution light is on; the deck follows the phase once it has held for a few
+seconds, jumps to the lights at once, and goes back to where you were when they
+clear. On the ground or in the air comes from height above ground, or, where a
+server hides it, from ground speed, which the hook works out from your own
+position. Switching off "Follow aircraft" turns all of this off.
+
+**How it talks to DCS.** The hook sends the cockpit values the deck needs over
+UDP on localhost (port 7790) and takes clicks back on 7791, the same way a
+mouse click in the cockpit works. Multiplayer servers can hide flight and
+sensor data from export scripts, but cockpit switches aren't part of that.
+
+To show text from a cockpit display (a radio channel on the UFC, say), click
+**Write display list** while flying: it writes every display's elements to
+`Saved Games/DCS/Logs/deckd-indicators.txt`, and a switch or knob can then
+show one of them.
+
 ## Trademarks
 
 These plugins are independent and not affiliated with or endorsed by Elgato,
 Corsair, the OBS Project, Discord, qBittorrent, GitHub, Docker, Portainer, Home
-Assistant or Anthropic. Product names are used only to say what each plugin
-works with.
+Assistant, Eagle Dynamics or Anthropic. DCS World is a trademark of Eagle
+Dynamics. Product names are used only to say what each plugin works with.
 
 ## Writing your own
 
