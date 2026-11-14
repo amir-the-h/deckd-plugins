@@ -11,7 +11,7 @@ for p in "${plugins[@]}"; do
   p=${p%/}
   out="dist/${p%.sdPlugin}.streamDeckPlugin"
   rm -f "$out"
-  zip -qrX "$out" "$p" -x '*/node_modules/.cache/*'
+  zip -qrX "$out" "$p" -x '*/node_modules/.cache/*' -x "$p/test/*"
   echo "$out"
 done
 node scripts/build-index.mjs dist deckd-plugins https://github.com/amir-the-h/deckd-plugins "${plugins[@]}"

@@ -24,6 +24,11 @@ jobs:
       - name: Check plugins
         run: for f in */plugin.js */lights.js; do node --check "$f"; done
 
+      - name: Test plugins
+        run: |
+          sudo apt-get install -y luajit
+          for t in */test; do node --test "$t"/*.test.js; done
+
       - name: Package
         run: scripts/pack.sh
 
